@@ -4,7 +4,14 @@
     "parameters": {
         "docDbName": {
             "type": "String"
-        }
+        },
+        "baseUri": {		
+            "type": "string",		
+            "defaultValue":"https://raw.githubusercontent.com/jpoon/aurora_deploy/master/",		
+            "metadata": {		
+                "description": "Public access base URI for deployment scripts"		
+            }		
+          }
     },
     "resources": [
         {
@@ -14,12 +21,12 @@
             "properties": {
                 "mode": "Incremental",
                 "templateLink": {
-                    "uri": "[concat(uri(baseUri, 'docdb.json'))]",
+                    "uri": "[concat(parameters('baseUri'), 'docdb.json')]",
                     "contentVersion": "1.0.0.0"
                 },
                 "parameters": {
                     "docDbName": {
-                        "value": "variables('docDbName')"
+                        "value": "parameters('docDbName')"
                     }
                 }
             }
