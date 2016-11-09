@@ -3,7 +3,31 @@
     "contentVersion": "1.0.0.0",
     "parameters": {
         "docDbName": {
-            "type": "String"
+            "type": "string"
+        },
+        "newStorageAccountName": {
+            "type": "string",
+            "metadata": {
+                "description": "Unique DNS Name for the Storage Account where the Virtual Machine's disks will be placed."
+            }
+        },
+        "adminUsername": {
+            "type": "string",
+            "metadata": {
+                "description": "Username for the Virtual Machine."
+            }
+        },
+        "adminPassword": {
+            "type": "securestring",
+            "metadata": {
+                "description": "Password for the Virtual Machine."
+            }
+        },
+        "dnsNameForPublicIP": {
+            "type": "string",
+            "metadata": {
+                "description": "Unique DNS Name for the Public IP used to access the Virtual Machine."
+            }
         },
         "baseUri": {		
             "type": "string",		
@@ -28,6 +52,32 @@
                     "docDbName": {
                         "value": "[parameters('docDbName')]"
                     } 
+                }
+            }
+        },
+        {
+            "apiVersion": "2015-01-01",
+            "name": "ingress",
+            "type": "Microsoft.Resources/deployments",
+            "properties": {
+                "mode": "Incremental",
+                "templateLink": {
+                    "uri": "[concat(parameters('baseUri'), 'ingress.json')]",
+                    "contentVersion": "1.0.0.0"
+                },
+                "parameters": {
+                    "newStorageAccountName": {
+                        "value": "[parameters('newStorageAccountName')]"
+                    },
+                    "adminUsername": {
+                        "value": "[parameters('adminUsername')]"
+                    },
+                    "adminPassword": {
+                        "value": "[parameters('adminPassword')]"
+                    },
+                    "dnsNameForPublicIP": {
+                        "value": "[parameters('dnsNameForPublicIP')]"
+                    }
                 }
             }
         }
