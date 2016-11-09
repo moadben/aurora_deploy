@@ -1,0 +1,85 @@
+{
+    "$schema": "http://schema.management.azure.com/schemas/2014-04-01-preview/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "docDbName": {
+            "type": "String"
+        },
+        "newStorageAccountName": {
+            "type": "String",
+            "metadata": {
+                "description": "Unique DNS Name for the Storage Account where the Virtual Machine's disks will be placed."
+            }
+        },
+        "adminUsername": {
+            "type": "String",
+            "metadata": {
+                "description": "Username for the Virtual Machine."
+            }
+        },
+        "adminPassword": {
+            "type": "SecureString",
+            "metadata": {
+                "description": "Password for the Virtual Machine."
+            }
+        },
+        "dnsNameForPublicIP": {
+            "type": "String",
+            "metadata": {
+                "description": "Unique DNS Name for the Public IP used to access the Virtual Machine."
+            }
+        },
+        "baseUri": {
+			"type": "string",
+			"defaultValue":"https://raw.githubusercontent.com/jpoon/aurora_deploy/master/",
+            "metadata": {
+				"description": "base uri for your git repo"
+			}
+        }
+    },
+    "resources": [
+        {
+            "apiVersion": "2015-01-01",
+            "name": "docdb",
+            "type": "Microsoft.Resources/deployments",
+            "properties": {
+                "mode": "Incremental",
+                "templateLink": {
+                    "uri": "[concat(uri(baseUri, 'docdb.json'))]",
+                    "contentVersion": "1.0.0.0"
+                },
+                "parameters": {
+                    "docDbName": {
+                        "value": "variables('docDbName')"
+                    }
+                }
+            }
+        },
+        {
+            "apiVersion": "2015-01-01",
+            "name": "ingress",
+            "type": "Microsoft.Resources/deployments",
+            "properties": {
+                "mode": "Incremental",
+                "templateLink": {
+                    "uri": "[concat(uri(baseUri, 'ingress.json'))]",
+                    "contentVersion": "1.0.0.0"
+                },
+                "parameters": {
+                    "newStorageAccountName": {
+                        "value": "variables('newStorageAccountName')"
+                    },
+                    "adminUsername": {
+                        "value": "variables('adminUsername')"
+                    },
+                    "adminPassword": {
+                        "value": "variables('adminPasswordnewStorageAccountName')"
+                    },
+                    "dnsNameForPublicIP": {
+                        "value": "variables('dnsNameForPublicIP')"
+                    }
+                }
+            }
+        }
+    ]
+}
