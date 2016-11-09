@@ -3,25 +3,25 @@
     "contentVersion": "1.0.0.0",
     "parameters": {
         "newStorageAccountName": {
-            "type": "String",
+            "type": "string",
             "metadata": {
                 "description": "Unique DNS Name for the Storage Account where the Virtual Machine's disks will be placed."
             }
         },
         "adminUsername": {
-            "type": "String",
+            "type": "string",
             "metadata": {
                 "description": "Username for the Virtual Machine."
             }
         },
         "adminPassword": {
-            "type": "SecureString",
+            "type": "securestring",
             "metadata": {
                 "description": "Password for the Virtual Machine."
             }
         },
         "dnsNameForPublicIP": {
-            "type": "String",
+            "type": "string",
             "metadata": {
                 "description": "Unique DNS Name for the Public IP used to access the Virtual Machine."
             }
@@ -31,7 +31,7 @@
             "allowedValues": [
                 "16.04.0-LTS"
             ],
-            "type": "String",
+            "type": "string",
             "metadata": {
                 "description": "The Ubuntu version for deploying the Docker containers. This will pick a fully patched image of this given Ubuntu version."
             }
