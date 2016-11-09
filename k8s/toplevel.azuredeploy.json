@@ -1,0 +1,87 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {  },
+  "variables": {
+    "deploymentBase": "gfkubeclus2",
+    "virtualNetworkName": "[concat(variables('deploymentBase'),'VNET')]", 
+    "k8sSubnetName": "[concat(variables('deploymentBase'),'K8sSubnet')]",
+    "k8sSubnetAddressRange": "10.239.0.0/16",
+    "glusterSubnetName": "[concat(variables('deploymentBase'),'GlusterSubnet')]",
+    "glusterSubnetAddressRange": "10.250.0.0/24",
+    "glusterSubnetAddressBase": "10.250.0.1"
+  },
+  "resources": [
+    {
+      "apiVersion": "2016-03-30",
+      "location": "[resourceGroup().location]",
+      "name": "[concat(variables('deploymentBase'),'VNET')]",
+      "properties": {
+        "addressSpace": {
+          "addressPrefixes": [
+            "10.0.0.0/8"
+          ]
+        },
+        "subnets": [
+          {
+            "name": "[variables('k8sSubnetName')]",
+            "properties": {
+              "addressPrefix": "[variables('k8sSubnetAddressRange')]"
+            }
+          },
+          {
+            "name": "[variables('glusterSubnetName')]",
+            "properties": {
+              "addressPrefix": "[variables('glusterSubnetAddressRange')]"
+            }
+          }
+        ]
+      },
+      "type": "Microsoft.Network/virtualNetworks"
+    },
+    {
+        "apiVersion": "2015-01-01",
+        "name": "glusterTemplate",
+        "type": "Microsoft.Resources/deployments",
+        "dependsOn": [
+          "[concat('Microsoft.Network/virtualNetworks/', variables('virtualNetworkName'))]"
+        ],
+        "properties": {
+          "mode": "incremental",
+          "templateLink": {
+            "uri": "https://raw.githubusercontent.com/jpoon/aurora_deploy/master/k8s/gluster/azuredeploy.json",
+            "contentVersion": "1.0.0.0"
+          },
+          "parameters": {
+            "storageAccountName": {
+              "value": "[concat(toLower(variables('deploymentBase')),'stor')]"
+            },
+            "virtualNetworkResourceGroup": {
+              "value": "[resourceGroup().name]"
+            },
+            "virtualNetworkName": {
+              "value": "[variables('virtualNetworkName')]" 
+            },
+            "gfsSubnetName": {
+              "value": "[variables('glusterSubnetName')]"
+            },
+            "adminUserName": {
+              "value": "gfuser"
+            },
+            "adminPassword": {
+              "value": "EpicHack2016"
+            },
+            "vmNamePrefix": {
+              "value": "[concat(toLower(variables('deploymentBase')),'gfsvm')]"
+            },
+            "vmSize": {
+              "value": "Standard_D1_v2"
+            },
+            "scaleNumber": {
+              "value": 4
+            }
+          }
+        }
+    }
+  ]
+}
