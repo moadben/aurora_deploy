@@ -191,7 +191,8 @@
             "location": "[resourceGroup().location]",
             "apiVersion": "2015-06-15",
             "dependsOn": [
-                "[concat('Microsoft.Compute/virtualMachines/', variables('vmName'))]"
+                "[concat('Microsoft.Compute/virtualMachines/', variables('vmName'))]",
+                "[concat('Microsoft.Compute/virtualMachines/', concat(variables('vmName'),'/extensions/', variables('extensionName')))]"
             ],
             "tags": {
                 "displayName": "scriptextensionforingress"
@@ -203,9 +204,9 @@
                 "autoUpgradeMinorVersion": true,
                 "settings": {
                     "fileUris": [
-                        "https://raw.githubusercontent.com/jamesbak/Iaas-Applications/master/OpenTSDB/scripts/install-opentsdb.sh"
+                        "https://raw.githubusercontent.com/jpoon/aurora_deploy/master/ingress/startup.sh"
                     ],
-                    "commandToExecute": "sh install-opentsdb.sh"
+                    "commandToExecute": "sh startup.sh"
                 }
             }
         }
