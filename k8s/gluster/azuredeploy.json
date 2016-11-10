@@ -50,10 +50,10 @@
         "description": "ssh user name"
       }
     },
-    "adminPassword": {
-      "type": "securestring",
+    "sshKeyData": {
+      "type": "string",
       "metadata": {
-        "description": "ssh password"
+        "description": "SSH rsa public key file as a string."
       }
     },
     "vmSize": {
@@ -109,6 +109,7 @@
     "nicName": "nic",
     "vnetId": "[resourceId(parameters('virtualNetworkResourceGroup'),'Microsoft.Network/virtualNetworks',parameters('virtualNetworkName'))]",
     "gfsSubnetRef": "[concat(variables('vnetID'),'/subnets/',parameters('gfsSubnetName'))]",
+    "sshKeyPath": "[concat('/home/',parameters('adminUserName'),'/.ssh/authorized_keys')]",
     "osImageUbuntuPublisher": "Canonical",
     "osImageUbuntuOffer": "UbuntuServer",
     "osImageUbuntuSKU": "14.04.3-LTS",
@@ -180,7 +181,17 @@
         "osProfile": {
           "computerName": "[concat(parameters('vmNamePrefix'), copyIndex())]",
           "adminUserName": "[parameters('adminUserName')]",
-          "adminPassword": "[parameters('adminPassword')]"
+          "linuxConfiguration": {
+            "disablePasswordAuthentication": "true",
+            "ssh": {
+              "publicKeys": [
+                {
+                  "path": "[variables('sshKeyPath')]",
+                  "keyData": "[parameters('sshKeyData')]"
+                }
+              ]
+            }
+          }
         },
         "storageProfile": {
           "imageReference": {
