@@ -14,7 +14,7 @@ VNET_NAME="$DNS_PREFIX""VNet"
 KUBERNETES_SUBNET="$DNS_PREFIX""KubernetesSubnet"
 GLUSTER_SUBNET="$DNS_PREFIX""GlusterSubnet"
 
-SUBSCRIPTION_ID=`az account list | jq -r '.[0].id'`
+SUBSCRIPTION_ID=`azure account list --json | jq -r '.[0].id'`
 
 SSH_KEY=`cat $SSH_KEYFILE`
 

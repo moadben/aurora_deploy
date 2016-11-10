@@ -8,6 +8,6 @@ curl https://raw.githubusercontent.com/jpoon/aurora_deploy/master/ingress/topach
 #echo "MONGO_URL=$4" >>$conf_file
 #echo "DATABASE_NAME=$5" >>$conf_file
 #echo "DBCOLLECTION=$6" >> $conf_file
-systemctl reload-daemon
+systemctl daemon-reload
 systemctl enable docker.topach.service
 systemctl start docker.topach.service
