@@ -7,8 +7,8 @@ Requires=docker.service
 TimeoutStartSec=0
 Restart=always
 EnvironmentFile=/etc/aurora/topach.conf
-ExecStartPre=-/usr/bin/docker login -u $USER -p $PASSWORD
-ExecStart=/usr/bin/docker run -p 4242:4242 --net=host --entrypoint ./topach generalfusion/topach:latest -p $PACH_IP -v localhost:6429 -c $DBCOLLECTION -d $DATABASE_NAME -u $MONGO_URL
+ExecStartPre=-/usr/bin/docker login -u $DOCKERHUB_USER -p $DOCKERHUB_PASSWORD
+ExecStart=/usr/bin/docker run -p 4242:4242 --net=host --entrypoint ./topach generalfusion/topach:latest -p $PACH_IP -v localhost:6429 -u $MONGO_URL -d $DB_NAME -c $DB_COLLECTION 
 
 [Install]
 WantedBy=multi-user.target

@@ -1,43 +1,114 @@
 {
-   "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+    "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
     "contentVersion": "1.0.0.0",
     "parameters": {
-        "docDbName": {
-            "type": "string"
-        },
-        "newStorageAccountName": {
+        "baseName": {
             "type": "string",
+            "minLength": 6,
+            "maxLength": 18,
             "metadata": {
-                "description": "Unique DNS Name for the Storage Account where the Virtual Machine's disks will be placed."
+                "description": "The name prefix for all resources created in this deployment."
             }
         },
         "adminUsername": {
             "type": "string",
             "metadata": {
-                "description": "Username for the Virtual Machine."
+                "description": "SSH username for all virtual machines created by this deployment."
             }
         },
         "adminPassword": {
             "type": "securestring",
             "metadata": {
-                "description": "Password for the Virtual Machine."
+                "description": "SSH username for all virtual machines created by this deployment."
             }
         },
-        "dnsNameForPublicIP": {
+        "dockerHubUsername": {
             "type": "string",
             "metadata": {
-                "description": "Unique DNS Name for the Public IP used to access the Virtual Machine."
+                "description": "Docker Hub account name to login to obtain docker packages"
             }
         },
-        "baseUri": {		
-            "type": "string",		
-            "defaultValue":"https://raw.githubusercontent.com/jpoon/aurora_deploy/master/",		
-            "metadata": {		
-                "description": "Public access base URI for deployment scripts"		
-            }		
-          }
+        "dockerHubPassword": {
+            "type": "securestring",
+            "metadata": {
+                "description": "Docker Hub account password to login to obtain docker packages"
+            }
+        },
+        "storageAccountType": {
+            "type": "string",
+            "defaultValue": "Standard_LRS",
+            "allowedValues": [
+                "Standard_LRS",
+                "Standard_ZRS",
+                "Standard_GRS",
+                "Standard_RAGRS"
+            ],
+            "metadata": {
+                "description": "Storage type for backing VM images + Pachyderm data"
+            }
+        },
+        "baseUri": {
+            "type": "string",
+            "defaultValue": "https://raw.githubusercontent.com/jpoon/aurora_deploy/master/",
+            "metadata": {
+                "description": "Public access base URI for deployment scripts"
+            }
+        },
+        "metadataDatabaseName": {
+            "type": "string",
+            "defaultValue": "aurora",
+            "metadata": {
+                "description": "Specify the name of the database to be used as Aurora's metadata store. This database is created in a DocumentDB account."
+            }
+        },
+        "metadataCollection": {
+            "type": "string",
+            "defaultValue": "waves",
+            "metadata": {
+                "description": "Specify the name of the collection to be used as Aurora's metadata store. This collection is created in a DocumentDB account."
+            }
+        }
+    },
+    "variables": {
+        "docDbName": "[concat(parameters('baseName'), '-metadata')]",
+        "vnetName": "[concat(parameters('baseName'), '-vnet')]",
+        "storageName": "[concat(parameters('baseName'), 'store')]",
+        "ingressVmName": "[concat(parameters('baseName'), '-ingress')]"
     },
     "resources": [
+        {
+            "apiVersion": "2015-06-15",
+            "type": "Microsoft.Network/virtualNetworks",
+            "name": "[variables('vnetName')]",
+            "location": "[resourceGroup().location]",
+            "properties": {
+                "addressSpace": {
+                    "addressPrefixes": [
+                        "10.0.0.0/16"
+                    ]
+                },
+                "subnets": [
+                    {
+                        "name": "ingress",
+                        "properties": {
+                            "addressPrefix": "10.0.0.0/24"
+                        }
+                    },
+                    {
+                        "name": "kubernetes",
+                        "properties": {
+                            "addressPrefix": "10.0.1.0/24"
+                        }
+                    },
+                    {
+                        "name": "glusterfs",
+                        "properties": {
+                            "addressPrefix": "10.0.2.0/24"
+                        }
+                    }
+                ]
+            }
+        },
         {
             "apiVersion": "2015-01-01",
             "name": "docdb",
@@ -50,9 +121,18 @@
                 },
                 "parameters": {
                     "docDbName": {
-                        "value": "[parameters('docDbName')]"
-                    } 
+                        "value": "[variables('docDbName')]"
+                    }
                 }
+            }
+        },
+        {
+            "type": "Microsoft.Storage/storageAccounts",
+            "name": "[variables('storageName')]",
+            "apiVersion": "2015-06-15",
+            "location": "[resourceGroup().location]",
+            "properties": {
+                "accountType": "[parameters('storageAccountType')]"
             }
         },
         {
@@ -66,8 +146,8 @@
                     "contentVersion": "1.0.0.0"
                 },
                 "parameters": {
-                    "newStorageAccountName": {
-                        "value": "[parameters('newStorageAccountName')]"
+                    "vmName": {
+                        "value": "[variables('ingressVmName')]"
                     },
                     "adminUsername": {
                         "value": "[parameters('adminUsername')]"
@@ -75,9 +155,40 @@
                     "adminPassword": {
                         "value": "[parameters('adminPassword')]"
                     },
-                    "dnsNameForPublicIP": {
-                        "value": "[parameters('dnsNameForPublicIP')]"
+                    "virtualNetworkName": {
+                        "value": "[variables('vnetName')]"
+                    },
+                    "subnetName": {
+                        "value": "ingress"
+                    },
+                    "storageAccountName": {
+                        "value": "[variables('storageName')]"
                     }
+                }
+            }
+        },
+        {
+            "type": "Microsoft.Compute/virtualMachines/extensions",
+            "name": "[concat(variables('vmName'),'/', variables('extensionScriptName'))]",            
+            "location": "[resourceGroup().location]",
+            "apiVersion": "2015-06-15",
+            "dependsOn": [
+                "Microsoft.Resources/deployments/ingress",
+                "Microsoft.Resources/deployments/docdb"
+            ],
+            "tags": {
+                "displayName": "IngressBootApplications"
+            },
+            "properties": {
+                "publisher": "Microsoft.Azure.Extensions",
+                "type": "CustomScript",
+                "typeHandlerVersion": "2.0",
+                "autoUpgradeMinorVersion": true,
+                "settings": {
+                    "fileUris": [
+                        "[concat(parameters('baseUri'), 'ingress/startup.sh')]"
+                    ],
+                    "commandToExecute": "[concat('sh startup.sh ', parameters('dockerHubUsername'), ' ', parameters('dockerHubPassword'), ' ', variables('pachydermAddress'), ' ', reference('docdb').outputs.mongoUri.value, ' ', parameters('metadataDatabaseName'), ' ', parameters('metadataCollection'))]"
                 }
             }
         }
