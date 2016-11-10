@@ -14,12 +14,13 @@ VNET_NAME="$DNS_PREFIX""VNet"
 KUBERNETES_SUBNET="$DNS_PREFIX""KubernetesSubnet"
 GLUSTER_SUBNET="$DNS_PREFIX""GlusterSubnet"
 
-SUBSCRIPTION_ID=`az account list | grep id | awk '{print $2}' | sed 's/,//' | sed 's/\"//g'`
+SUBSCRIPTION_ID=`az account list | jq -r '.[0].id'`
+
 SSH_KEY=`cat $SSH_KEYFILE`
 
-SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
-K8S_CONFIG_FILE=`echo $SCRIPT_DIR | sed 's/bin//'`k8s/config/kubernetesvnet.json
-K8S_DEPLOYMENT_FILE=`echo $SCRIPT_DIR | sed 's/bin//'`k8s/config/kube-acsengine-$NOW.json
+SCRIPT_DIR=`dirname $( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )`
+K8S_CONFIG_FILE=`echo ${SCRIPT_DIR}/k8s/config/kubernetesvnet.json`
+K8S_DEPLOYMENT_FILE=`echo ${SCRIPT_DIR}/k8s/config/kube-acsengine-$NOW.json`
 
 cat $K8S_CONFIG_FILE \
     | sed "s/@@RESOURCE_GROUP@@/$RESOURCE_GROUP/g" \
@@ -33,6 +34,5 @@ cat $K8S_CONFIG_FILE \
     | sed "s/@@SERVICE_PRINCIPAL_ID@@/$SERVICE_PRINCIPAL_ID/g" \
     | sed "s/@@SERVICE_PRINCIPAL_SECRET@@/$SERVICE_PRINCIPAL_SECRET/g" \
     | sed "s~@@SSH_KEY@@~$SSH_KEY~g" \
-    > $K8S_DEPLOYMENT_FILE
+    | tee $K8S_DEPLOYMENT_FILE
 
-cat $K8S_DEPLOYMENT_FILE
