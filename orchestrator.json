@@ -45,7 +45,7 @@
             "properties": {
                 "mode": "Incremental",
                 "templateLink": {
-                    "uri": "[concat(parameters('baseUri'), 'ingress/docdb.json')]",
+                    "uri": "[concat(parameters('baseUri'), 'docdb.json')]",
                     "contentVersion": "1.0.0.0"
                 },
                 "parameters": {
@@ -62,7 +62,7 @@
             "properties": {
                 "mode": "Incremental",
                 "templateLink": {
-                    "uri": "[concat(parameters('baseUri'), 'ingress.json')]",
+                    "uri": "[concat(parameters('baseUri'), 'ingress/ingress.json')]",
                     "contentVersion": "1.0.0.0"
                 },
                 "parameters": {
