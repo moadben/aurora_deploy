@@ -1,5 +1,5 @@
 {
-   "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+    "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
     "contentVersion": "1.0.0.0",
     "parameters": {
         "docDbName": {
@@ -8,7 +8,7 @@
     },
     "resources": [
         {
-            "type": "Microsoft.DocumentDb/databaseAccounts",
+            "type": "Microsoft.DocumentDB/databaseAccounts",
             "kind": "MongoDB",
             "name": "[parameters('docDbName')]",
             "apiVersion": "2015-04-08",
@@ -18,5 +18,11 @@
                 "databaseAccountOfferType": "Standard"
             }
         }
-    ]
+    ],
+    "outputs": {
+        "mongoUri": {
+            "value": "[concat('mongodb://', parameters('docDbName'), ':', listKeys(resourceId('Microsoft.DocumentDB/databaseAccounts', parameters('docDbName')), '2015-04-08').primaryMasterKey, '@', parameters('docDbName'), '.documents.azure.com:10250/?ssl=true')]",
+            "type": "string"
+        }
+    }
 }
