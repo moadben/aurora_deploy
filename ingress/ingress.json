@@ -3,7 +3,7 @@
     "contentVersion": "1.0.0.0",
     "parameters": {
         "vmName": {
-            "type":"string"
+            "type": "string"
         },
         "vmSize": {
             "type": "string",
@@ -42,9 +42,6 @@
         },
         "ubuntuOSVersion": {
             "defaultValue": "16.04.0-LTS",
-            "allowedValues": [
-                "16.04.0-LTS"
-            ],
             "type": "string",
             "metadata": {
                 "description": "The Ubuntu version for deploying the Docker containers. This will pick a fully patched image of this given Ubuntu version."
@@ -52,7 +49,7 @@
         }
     },
     "variables": {
-        "OSDiskName": "osdiskfordockersimple",
+        "OSDiskName": "ingressosdisk",
         "vnetResourceId": "[resourceId(resourceGroup().name, 'Microsoft.Network/virtualNetworks', parameters('virtualNetworkName'))]",
         "subnetRef": "[concat(variables('vnetResourceId'), '/subnets/', parameters('subnetName'))]"
     },

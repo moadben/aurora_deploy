@@ -8,7 +8,7 @@ TimeoutStartSec=0
 Restart=always
 EnvironmentFile=/etc/aurora/aurora.conf
 ExecStartPre=-/usr/bin/docker login -u $DOCKERHUB_USER -p $DOCKERHUB_PASSWORD
-ExecStart=/usr/bin/docker run -p $TOPACH_PORT:$TOPACH_PORT --entrypoint ./presence generalfusion/presence:latest -p $PACH_IP -c versions -d $DATABASE_NAME -u $MONGO_URL
+ExecStart=/usr/bin/docker run -p $PRESENCE_PORT:$PRESENCE_PORT --entrypoint ./presence generalfusion/presence:latest -a $PRESENCE_PORT -p $PACH_IP -c $DB_COLLECTION -d $DB_NAME -u $MONGO_URL
 
 [Install]
 WantedBy=multi-user.target
