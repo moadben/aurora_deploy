@@ -1,0 +1,14 @@
+[Unit]
+Description=Ingress Start for Presence Container
+After=docker.service
+Requires=docker.service
+
+[Service]
+TimeoutStartSec=0
+Restart=always
+EnvironmentFile=/etc/aurora/aurora.conf
+ExecStartPre=-/usr/bin/docker login -u $USER -p $PASSWORD
+ExecStart=/usr/bin/docker run -p $TOPACH_PORT:$TOPACH_PORT --entrypoint ./presence generalfusion/presence:latest -p $PACH_IP -c versions -d $DATABASE_NAME -u $MONGO_URL
+
+[Install]
+WantedBy=multi-user.target
