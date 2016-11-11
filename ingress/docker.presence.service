@@ -7,7 +7,7 @@ Requires=docker.service
 TimeoutStartSec=0
 Restart=always
 EnvironmentFile=/etc/aurora/aurora.conf
-ExecStartPre=-/usr/bin/docker login -u $USER -p $PASSWORD
+ExecStartPre=-/usr/bin/docker login -u $DOCKERHUB_USER -p $DOCKERHUB_PASSWORD
 ExecStart=/usr/bin/docker run -p $TOPACH_PORT:$TOPACH_PORT --entrypoint ./presence generalfusion/presence:latest -p $PACH_IP -c versions -d $DATABASE_NAME -u $MONGO_URL
 
 [Install]
