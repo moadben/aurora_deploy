@@ -33,6 +33,13 @@
                 "description": "Unique DNS Name for the Storage Account where the Virtual Machine's disks will be placed."
             }
         },
+        "toPachPortNumber": {
+            "type": "int",
+            "defaultValue": 4242,
+            "metadata": {
+                "description": "Port number that ToPach will listen on (default: 4242)."
+            }
+        },
         "ubuntuOSVersion": {
             "defaultValue": "16.04.0-LTS",
             "allowedValues": [
@@ -46,7 +53,7 @@
     },
     "variables": {
         "OSDiskName": "osdiskfordockersimple",
-        "vnetResourceId": "[resourceId('Microsoft.Network/virtualNetworks', parameters('virtualNetworkName'))]",
+        "vnetResourceId": "[resourceId(resourceGroup().name, 'Microsoft.Network/virtualNetworks', parameters('virtualNetworkName'))]",
         "subnetRef": "[concat(variables('vnetResourceId'), '/subnets/', parameters('subnetName'))]"
     },
     "resources": [
@@ -60,6 +67,42 @@
                 "dnsSettings": {
                     "domainNameLabel": "[parameters('vmName')]"
                 }
+            }
+        },
+        {
+            "type": "Microsoft.Network/networkSecurityGroups",
+            "name": "IngressNSG",
+            "apiVersion": "2016-03-30",
+            "location": "[resourceGroup().location]",
+            "properties": {
+                "securityRules": [
+                    {
+                        "name": "ssh",
+                        "properties": {
+                            "protocol": "TCP",
+                            "sourcePortRange": "*",
+                            "destinationPortRange": "22",
+                            "sourceAddressPrefix": "*",
+                            "destinationAddressPrefix": "*",
+                            "access": "Allow",
+                            "priority": 100,
+                            "direction": "Inbound"
+                        }
+                    },
+                    {
+                        "name": "ToPach",
+                        "properties": {
+                            "protocol": "TCP",
+                            "sourcePortRange": "*",
+                            "destinationPortRange": "[parameters('toPachPortNumber')]",
+                            "sourceAddressPrefix": "*",
+                            "destinationAddressPrefix": "*",
+                            "access": "Allow",
+                            "priority": 101,
+                            "direction": "Inbound"
+                        }
+                    }
+                ]
             }
         },
         {
@@ -81,11 +124,14 @@
                             }
                         }
                     }
-                ]
+                ],
+                "networkSecurityGroup": {
+                    "id": "[resourceId('Microsoft.Network/networkSecurityGroups', 'IngressNSG')]"
+                }
             },
             "dependsOn": [
                 "Microsoft.Network/publicIPAddresses/IngressIP",
-                "[variables('vnetResourceId')]"
+                "Microsoft.Network/networkSecurityGroups/IngressNSG"
             ]
         },
         {
@@ -129,7 +175,7 @@
             "resources": [
                 {
                     "type": "Microsoft.Compute/virtualMachines/extensions",
-                    "name": "[concat(variables('vmName'), '/InstallDocker'))]",
+                    "name": "IngressVM/InstallDocker",
                     "apiVersion": "2015-06-15",
                     "location": "[resourceGroup().location]",
                     "properties": {
@@ -138,11 +184,13 @@
                         "typeHandlerVersion": "1.0",
                         "autoUpgradeMinorVersion": true,
                         "settings": {}
-                    }
+                    },
+                    "dependsOn": [
+                        "Microsoft.Compute/virtualMachines/IngressVM"
+                    ]
                 }
             ],
             "dependsOn": [
-                "[concat('Microsoft.Storage/storageAccounts/', parameters('storageAccountName'))]",
                 "Microsoft.Network/networkInterfaces/IngressNic"
             ]
         }

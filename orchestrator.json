@@ -71,14 +71,14 @@
         },
         "toPachPortNumber": {
             "type": "int",
-            "defaultValue": "4242",
+            "defaultValue": 4242,
             "metadata": {
                 "description": "Port number that ToPach will listen on (default: 4242)."
             }
         },
         "PresencePortNumber": {
             "type": "int",
-            "defaultValue": "6429",
+            "defaultValue": 6429,
             "metadata": {
                 "description": "Port number that Presense will listen on (default: 6429)."
             }
@@ -88,7 +88,8 @@
         "docDbName": "[concat(parameters('baseName'), '-metadata')]",
         "vnetName": "[concat(parameters('baseName'), '-vnet')]",
         "storageName": "[concat(parameters('baseName'), 'store')]",
-        "ingressVmName": "[concat(parameters('baseName'), '-ingress')]"
+        "ingressVmName": "[concat(parameters('baseName'), '-ingress')]",
+        "pachydermAddress": "10.0.1.5:650"
     },
     "resources": [
         {
@@ -178,13 +179,20 @@
                     },
                     "storageAccountName": {
                         "value": "[variables('storageName')]"
+                    },
+                    "toPachPortNumber": {
+                        "value": "[parameters('toPachPortNumber')]"
                     }
                 }
-            }
+            },
+            "dependsOn": [
+                "[resourceId('Microsoft.Storage/storageAccounts', variables('storageName'))]",
+                "[resourceId('Microsoft.Network/virtualNetworks', variables('vnetName'))]"
+            ]
         },
         {
             "type": "Microsoft.Compute/virtualMachines/extensions",
-            "name": "[concat(variables('ingressVmName'), '/CustomScriptExtension')]",            
+            "name": "IngressVM/InstallIngress",            
             "location": "[resourceGroup().location]",
             "apiVersion": "2015-06-15",
             "dependsOn": [
@@ -203,7 +211,7 @@
                     "fileUris": [
                         "[concat(parameters('baseUri'), 'ingress/startup.sh')]"
                     ],
-                    "commandToExecute": "[concat('sh startup.sh ', parameters('dockerHubUsername'), ' ', parameters('dockerHubPassword'), ' ', variables('pachydermAddress'), ' ', reference('docdb').outputs.mongoUri.value, ' ', parameters('metadataDatabaseName'), ' ', parameters('metadataCollection'), ' ', parameters('toPachPortNumber'), ' ', parameters('presencePortNumber')]"
+                    "commandToExecute": "[concat('sh startup.sh ', parameters('dockerHubUsername'), ' ', parameters('dockerHubPassword'), ' ', variables('pachydermAddress'), ' ', reference('docdb').outputs.mongoUri.value, ' ', parameters('metadataDatabaseName'), ' ', parameters('metadataCollection'), ' ', parameters('toPachPortNumber'), ' ', parameters('presencePortNumber'))]"
                 }
             }
         }
