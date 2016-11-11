@@ -24,6 +24,7 @@
         },
         "dockerHubUsername": {
             "type": "string",
+            "defaultValue": "generalfusionaurora",
             "metadata": {
                 "description": "Docker Hub account name to login to obtain docker packages"
             }
@@ -66,6 +67,20 @@
             "defaultValue": "waves",
             "metadata": {
                 "description": "Specify the name of the collection to be used as Aurora's metadata store. This collection is created in a DocumentDB account."
+            }
+        },
+        "toPachPortNumber": {
+            "type": "int",
+            "defaultValue": "4242",
+            "metadata": {
+                "description": "Port number that ToPach will listen on (default: 4242)."
+            }
+        },
+        "PresencePortNumber": {
+            "type": "int",
+            "defaultValue": "6429",
+            "metadata": {
+                "description": "Port number that Presense will listen on (default: 6429)."
             }
         }
     },
@@ -169,7 +184,7 @@
         },
         {
             "type": "Microsoft.Compute/virtualMachines/extensions",
-            "name": "[concat(variables('vmName'),'/', variables('extensionScriptName'))]",            
+            "name": "[concat(variables('ingressVmName'), '/CustomScriptExtension')]",            
             "location": "[resourceGroup().location]",
             "apiVersion": "2015-06-15",
             "dependsOn": [
@@ -188,7 +203,7 @@
                     "fileUris": [
                         "[concat(parameters('baseUri'), 'ingress/startup.sh')]"
                     ],
-                    "commandToExecute": "[concat('sh startup.sh ', parameters('dockerHubUsername'), ' ', parameters('dockerHubPassword'), ' ', variables('pachydermAddress'), ' ', reference('docdb').outputs.mongoUri.value, ' ', parameters('metadataDatabaseName'), ' ', parameters('metadataCollection'))]"
+                    "commandToExecute": "[concat('sh startup.sh ', parameters('dockerHubUsername'), ' ', parameters('dockerHubPassword'), ' ', variables('pachydermAddress'), ' ', reference('docdb').outputs.mongoUri.value, ' ', parameters('metadataDatabaseName'), ' ', parameters('metadataCollection'), ' ', parameters('toPachPortNumber'), ' ', parameters('presencePortNumber')]"
                 }
             }
         }
