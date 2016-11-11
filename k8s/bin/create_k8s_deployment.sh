@@ -9,6 +9,10 @@ SERVICE_PRINCIPAL_ID=$4
 SERVICE_PRINCIPAL_SECRET=$5
 SSH_KEYFILE=$6
 
+# Default values
+# If a resource group does not already exist, use the "DEFAULT_REGION"
+DEFAULT_REGION="westus"
+
 # VNet config information
 VNET_NAME="$DNS_PREFIX""VNet"
 KUBERNETES_SUBNET="$DNS_PREFIX""KubernetesSubnet"
@@ -22,12 +26,21 @@ AGENT_VM_SIZE="Standard_D2_v2"
 GLUSTER_NODE_COUNT=4
 GLUSTER_VM_SIZE="Standard_D1_v2"
 
+# Retrieve account and region information
 SUBSCRIPTION_ID=`azure account list --json | jq -r '.[0].id'`
-RESOURCE_GROUP_REGION=`azure group show jmstest3 --json | jq -r '.location'`
+# Check if resource group already present
+azure group list --json | grep "\"name\": \"$RESOURCE_GROUP\"" >& /dev/null
+if [ $? -eq 1 ]
+then
+  echo "Creating resource group"
+  azure group create --name "$RESOURCE_GROUP" --location "$DEFAULT_REGION"
+fi
+RESOURCE_GROUP_REGION=`azure group show $RESOURCE_GROUP --json | jq -r '.location'`
 
 SSH_KEY=`cat $SSH_KEYFILE`
 
 SCRIPT_DIR=`dirname $( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )`
+TOPLEVEL_AZURE_DEPLOY_JSON=`echo ${SCRIPT_DIR}/toplevel.azuredeploy.json`
 K8S_CONFIG_FILE=`echo ${SCRIPT_DIR}/k8s/config/kubernetesvnet.json`
 K8S_DEPLOYMENT_FILE=`echo ${SCRIPT_DIR}/k8s/config/kube-acsengine-$NOW.json`
 DEPLOYMENT_OUTPUT_DIR=`echo ${SCRIPT_DIR}/output/deployment-$NOW`
@@ -125,4 +138,12 @@ cat << EOF > $DEPLOYMENT_PARAMETERS_FILE
 }
 EOF
 
-cat $DEPLOYMENT_PARAMETERS_FILE
+echo "Validating deployment template"
+echo "  template:    $TOPLEVEL_AZURE_DEPLOY_JSON"
+echo "  parameters:  $DEPLOYMENT_PARAMETERS_FILE"
+azure group template validate --resource-group="$RESOURCE_GROUP" --template-file="$TOPLEVEL_AZURE_DEPLOY_JSON" --parameters-file="$DEPLOYMENT_PARAMETERS_FILE"
+
+echo "Deploying template"
+echo "  template:    $TOPLEVEL_AZURE_DEPLOY_JSON"
+echo "  parameters:  $DEPLOYMENT_PARAMETERS_FILE"
+azure group deployment create --name="$RESOURCE_GROUP-dep" --resource-group="$RESOURCE_GROUP" --template-file="$TOPLEVEL_AZURE_DEPLOY_JSON" --parameters-file="$DEPLOYMENT_PARAMETERS_FILE"
