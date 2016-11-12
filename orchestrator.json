@@ -16,10 +16,10 @@
                 "description": "SSH username for all virtual machines created by this deployment."
             }
         },
-        "adminPassword": {
-            "type": "securestring",
+        "sshKeyData": {
+            "type": "string",
             "metadata": {
-                "description": "SSH username for all virtual machines created by this deployment."
+                "description": "The SSH public key for the administrative user"
             }
         },
         "dockerHubUsername": {
@@ -33,6 +33,18 @@
             "type": "securestring",
             "metadata": {
                 "description": "Docker Hub account password to login to obtain docker packages"
+            }
+        },
+        "internalSshPublicKey": {
+            "type": "string",
+            "metadata": {
+                "description": "SSH public key for internal cluster connectivity"
+            }
+        },
+        "internalSshPrivateKey": {
+            "type": "securestring",
+            "metadata": {
+                "description": "SSH private key for internal cluster connectivity"
             }
         },
         "storageAccountType": {
@@ -168,8 +180,8 @@
                     "adminUsername": {
                         "value": "[parameters('adminUsername')]"
                     },
-                    "adminPassword": {
-                        "value": "[parameters('adminPassword')]"
+                    "sshKeyData": {
+                        "value": "[parameters('sshKeyData')]"
                     },
                     "virtualNetworkName": {
                         "value": "[variables('vnetName')]"
@@ -182,7 +194,13 @@
                     },
                     "toPachPortNumber": {
                         "value": "[parameters('toPachPortNumber')]"
-                    }
+                    },
+                    "internalSshPublicKey": {
+                        "value": "[parameters('internalSshPublicKey')]"
+                    },
+                    "internalSshPrivateKey": {
+                        "value": "[parameters('internalSshPrivateKey')]"
+                    }                    
                 }
             },
             "dependsOn": [
@@ -192,7 +210,7 @@
         },
         {
             "type": "Microsoft.Compute/virtualMachines/extensions",
-            "name": "IngressVM/InstallIngress",            
+            "name": "IngressVM/InstallIngress",
             "location": "[resourceGroup().location]",
             "apiVersion": "2015-06-15",
             "dependsOn": [
@@ -209,9 +227,11 @@
                 "autoUpgradeMinorVersion": true,
                 "settings": {
                     "fileUris": [
-                        "[concat(parameters('baseUri'), 'ingress/startup.sh')]"
+                        "[concat(parameters('baseUri'), 'ingress/startup.sh')]",
+                        "[concat(parameters('baseUri'), 'ingress/docker.presence.service')]",
+                        "[concat(parameters('baseUri'), 'ingress/docker.topach.service')]"
                     ],
-                    "commandToExecute": "[concat('sh startup.sh ', parameters('dockerHubUsername'), ' ', parameters('dockerHubPassword'), ' ', variables('pachydermAddress'), ' ', reference('docdb').outputs.mongoUri.value, ' ', parameters('metadataDatabaseName'), ' ', parameters('metadataCollection'), ' ', parameters('toPachPortNumber'), ' ', parameters('presencePortNumber'))]"
+                    "commandToExecute": "[concat('sh startup.sh \"', parameters('dockerHubUsername'), '\" \"', parameters('dockerHubPassword'), '\" \"', variables('pachydermAddress'), '\" \"', reference('docdb').outputs.mongoUri.value, '\" \"', parameters('metadataDatabaseName'), '\" \"', parameters('metadataCollection'), '\" ', parameters('presencePortNumber'), ' ', parameters('toPachPortNumber'), ' && echo \"', parameters('internalSshPrivateKey'), '\" >> /home/', parameters('adminUsername'), '/.ssh/id_rsa')]"
                 }
             }
         }

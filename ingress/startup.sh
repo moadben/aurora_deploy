@@ -10,8 +10,8 @@
 #   $6: Name of metadata collection
 #   $7: Port number that Presence is listening on
 #   $8: Port number that ToPach is listening on
-curl https://raw.githubusercontent.com/jpoon/aurora_deploy/master/ingress/docker.topach.service > /etc/systemd/system/docker.topach.service
-curl https://raw.githubusercontent.com/jpoon/aurora_deploy/master/ingress/docker.presence.service > /etc/systemd/system/docker.presence.service
+cp ./docker.topach.service /etc/systemd/system/docker.topach.service
+cp ./docker.presence.service /etc/systemd/system/docker.presence.service
 
 # Emit our config file for services
 mkdir /etc/aurora
@@ -26,7 +26,8 @@ echo "PRESENCE_PORT=${7:-6429}" >> $conf_file
 echo "TOPACH_PORT=${8:-4242}" >> $conf_file
 
 systemctl daemon-reload
-systemctl enable docker.topach.service
-systemctl start docker.topach.service
 systemctl enable docker.presence.service
 systemctl start docker.presence.service
+sleep 5s
+systemctl enable docker.topach.service
+systemctl start docker.topach.service

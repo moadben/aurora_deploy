@@ -15,10 +15,10 @@
                 "description": "Username for the Virtual Machine."
             }
         },
-        "adminPassword": {
-            "type": "securestring",
+        "sshKeyData": {
+            "type": "string",
             "metadata": {
-                "description": "Password for the Virtual Machine."
+                "description": "The SSH public key for the administrative user"
             }
         },
         "virtualNetworkName": {
@@ -38,6 +38,18 @@
             "defaultValue": 4242,
             "metadata": {
                 "description": "Port number that ToPach will listen on (default: 4242)."
+            }
+        },
+        "internalSshPublicKey": {
+            "type": "string",
+            "metadata": {
+                "description": "SSH public key for internal cluster connectivity"
+            }
+        },
+        "internalSshPrivateKey": {
+            "type": "securestring",
+            "metadata": {
+                "description": "SSH private key for internal cluster connectivity"
             }
         },
         "ubuntuOSVersion": {
@@ -143,7 +155,22 @@
                 "osProfile": {
                     "computerName": "[parameters('vmName')]",
                     "adminUsername": "[parameters('adminUsername')]",
-                    "adminPassword": "[parameters('adminPassword')]"
+                    "adminPassword": "",
+                    "linuxConfiguration": {
+                        "disablePasswordAuthentication": true,
+                        "ssh": {
+                            "publicKeys": [
+                                {
+                                    "keyData": "[parameters('sshKeyData')]",
+                                    "path": "[concat('/home/', parameters('adminUsername'), '/.ssh/authorized_keys')]"
+                                },
+                                {
+                                    "keyData": "[parameters('internalSshPublicKey')]",
+                                    "path": "[concat('/home/', parameters('adminUsername'), '/.ssh/authorized_keys')]"
+                                }
+                            ]
+                        }
+                    }
                 },
                 "storageProfile": {
                     "imageReference": {
