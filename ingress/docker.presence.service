@@ -9,7 +9,7 @@ Restart=always
 EnvironmentFile=/etc/aurora/aurora.conf
 Environment=CONTAINER=presence
 ExecStartPre=/usr/bin/docker login -u $DOCKERHUB_USER -p $DOCKERHUB_PASSWORD
-ExecStart=/usr/bin/docker run -p ${PRESENCE_PORT}:${PRESENCE_PORT} --name $CONTAINER --entrypoint ./presence generalfusion/presence:latest -a 0.0.0.0:${PRESENCE_PORT} -p $PACH_IP -c $DB_COLLECTION -d $DB_NAME -u $MONGO_URL
+ExecStart=/usr/bin/docker run -p ${PRESENCE_PORT}:${PRESENCE_PORT} --name $CONTAINER --entrypoint ./presence generalfusion/presence:latest -a 0.0.0.0:${PRESENCE_PORT} -p $PACH_IP -c $DB_VERSION_COLN -d $DB_NAME -u $MONGO_URL
 ExecStop=/usr/bin/docker kill $CONTAINER
 ExecStopPost=/usr/bin/docker rm $CONTAINER
 
