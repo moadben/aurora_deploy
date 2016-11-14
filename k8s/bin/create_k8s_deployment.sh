@@ -11,7 +11,7 @@ SSH_KEYFILE=$6
 
 # Default values
 # If a resource group does not already exist, use the "DEFAULT_REGION"
-DEFAULT_REGION="westus"
+DEFAULT_REGION="westus2"
 
 # VNet config information
 VNET_NAME="$DNS_PREFIX""VNet"
