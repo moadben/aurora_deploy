@@ -112,7 +112,7 @@
     "sshKeyPath": "[concat('/home/',parameters('adminUserName'),'/.ssh/authorized_keys')]",
     "osImageUbuntuPublisher": "Canonical",
     "osImageUbuntuOffer": "UbuntuServer",
-    "osImageUbuntuSKU": "14.04.3-LTS",
+    "osImageUbuntuSKU": "14.04.4-LTS",
     "osImageUbuntuVersion": "latest",
     "osImageCentosPublisher": "OpenLogic",
     "osImageCentosOffer": "CentOS",
