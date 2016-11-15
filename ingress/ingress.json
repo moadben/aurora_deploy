@@ -68,7 +68,7 @@
     "resources": [
         {
             "type": "Microsoft.Network/publicIPAddresses",
-            "name": "IngressIP",
+            "name": "ingress-ip",
             "apiVersion": "2015-06-15",
             "location": "[resourceGroup().location]",
             "properties": {
@@ -80,7 +80,7 @@
         },
         {
             "type": "Microsoft.Network/networkSecurityGroups",
-            "name": "IngressNSG",
+            "name": "ingress-nsg",
             "apiVersion": "2016-03-30",
             "location": "[resourceGroup().location]",
             "properties": {
@@ -116,7 +116,7 @@
         },
         {
             "type": "Microsoft.Network/networkInterfaces",
-            "name": "IngressNic",
+            "name": "ingress-nic",
             "apiVersion": "2015-06-15",
             "location": "[resourceGroup().location]",
             "properties": {
@@ -145,7 +145,7 @@
         },
         {
             "type": "Microsoft.Compute/virtualMachines",
-            "name": "IngressVM",
+            "name": "ingress-vm",
             "apiVersion": "2015-06-15",
             "location": "[resourceGroup().location]",
                 "properties": {
