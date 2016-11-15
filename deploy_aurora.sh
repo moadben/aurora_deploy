@@ -17,7 +17,12 @@ K8S_AGENT_VM_SIZE=${13:-'Standard_D2_v2'}
 GLUSTER_NODE_COUNT=${14:-4}
 GLUSTER_NODE_VM_SIZE=${15:-'Standard_D1_v2'}
 ACS_ENGINE_CONFIG_FILE=${16}
-BASE_DEPLOYMENT_URI=${17:-'https://raw.githubusercontent.com/jpoon/aurora_deploy/$(git rev-parse HEAD)/'}
+BASE_DEPLOYMENT_URI=${17}
+
+if [ -z "$DEFAULT_BASE_URI" ]
+then
+	BASE_DEPLOYMENT_URI="https://raw.githubusercontent.com/jpoon/aurora_deploy/$(git rev-parse HEAD)/"
+fi
 
 NOW=`date +"%s"`
 
