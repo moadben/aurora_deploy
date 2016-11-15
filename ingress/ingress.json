@@ -199,7 +199,7 @@
             "resources": [
                 {
                     "type": "Microsoft.Compute/virtualMachines/extensions",
-                    "name": "IngressVM/InstallDocker",
+                    "name": "ingress-vm/install-docker",
                     "apiVersion": "2015-06-15",
                     "location": "[resourceGroup().location]",
                     "properties": {
@@ -210,12 +210,12 @@
                         "settings": {}
                     },
                     "dependsOn": [
-                        "Microsoft.Compute/virtualMachines/IngressVM"
+                        "Microsoft.Compute/virtualMachines/ingress-vm"
                     ]
                 }
             ],
             "dependsOn": [
-                "Microsoft.Network/networkInterfaces/IngressNic"
+                "Microsoft.Network/networkInterfaces/ingress-nic"
             ]
         }
     ]

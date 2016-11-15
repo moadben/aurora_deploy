@@ -10,13 +10,13 @@ SERVICE_PRINCIPAL_ID=$6
 SERVICE_PRINCIPAL_SECRET=$7
 DEPLOYMENT_STORAGE_BASEURI=$8
 DEPLOYMENT_STORAGE_SAS=$9
-DOCKER_HUB_USERNAME=$10
-DOCKER_HUB_PASSWORD=$11
+DOCKER_HUB_USERNAME=${10}
+DOCKER_HUB_PASSWORD=${11}
 K8S_AGENT_COUNT=${12:-4}
 K8S_AGENT_VM_SIZE=${13:-'Standard_D2_v2'}
 GLUSTER_NODE_COUNT=${14:-4}
 GLUSTER_NODE_VM_SIZE=${15:-'Standard_D1_v2'}
-ACS_ENGINE_CONFIG_FILE=$16
+ACS_ENGINE_CONFIG_FILE=${16}
 BASE_DEPLOYMENT_URI=${17:-'https://raw.githubusercontent.com/jpoon/aurora_deploy/master/'}
 
 NOW=`date +"%s"`
@@ -79,8 +79,8 @@ DEPLOYMENT_STORAGE_BASEURI="${DEPLOYMENT_STORAGE_BASEURI%%+(/)}"
 ACS_TEMPLATE_URI="$DEPLOYMENT_STORAGE_BASEURI/azuredeploy-$NOW.json$DEPLOYMENT_STORAGE_SAS"
 ACS_PARAMETERS_URI="$DEPLOYMENT_STORAGE_BASEURI/azuredeploy-$NOW.parameters.json$DEPLOYMENT_STORAGE_SAS"
 
-curl -X PUT -d @"$ACS_ENGINE_OUTPUT_DIR/azuredeploy.json" -H "date:$(date -u +%a,\ %d\ %b\ %Y\ %H:%M:%S\ GMT)" -H "x-ms-blob-type:BlockBlob" -H "x-ms-version:2012-02-12" $ACS_TEMPLATE_URI
-curl -X PUT -d @"$ACS_ENGINE_OUTPUT_DIR/acs-azuredeploy.parameters.json" -H "date:$(date -u +%a,\ %d\ %b\ %Y\ %H:%M:%S\ GMT)" -H "x-ms-blob-type:BlockBlob" -H "x-ms-version:2012-02-12" $ACS_PARAMETERS_URI
+curl -X PUT -d @"$ACS_ENGINE_OUTPUT_DIR/azuredeploy.json" -H "x-ms-blob-type: BlockBlob" $ACS_TEMPLATE_URI
+curl -X PUT -d @"$ACS_ENGINE_OUTPUT_DIR/acs-azuredeploy.parameters.json" -H "x-ms-blob-type: BlockBlob" $ACS_PARAMETERS_URI
 
 echo "Invoking ARM E2E template"
 # Generate parameters file
