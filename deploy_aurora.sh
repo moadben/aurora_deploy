@@ -1,42 +1,51 @@
 #! /bin/bash
 
+NOW=`date +"%s"`
+
 # Shared config information
-BASENAME=$1
+BASENAME=${1:-'Aurora-'$NOW}
 RESOURCE_GROUP=$2
 REGION=$3
 ADMIN_NAME=$4
-SSH_KEYFILE=$5
-SERVICE_PRINCIPAL_ID=$6
-SERVICE_PRINCIPAL_SECRET=$7
-DEPLOYMENT_STORAGE_BASEURI=$8
-DEPLOYMENT_STORAGE_SAS=$9
-DOCKER_HUB_USERNAME=${10}
-DOCKER_HUB_PASSWORD=${11}
-K8S_AGENT_COUNT=${12:-4}
-K8S_AGENT_VM_SIZE=${13:-'Standard_D2_v2'}
-GLUSTER_NODE_COUNT=${14:-4}
-GLUSTER_NODE_VM_SIZE=${15:-'Standard_D1_v2'}
-ACS_ENGINE_CONFIG_FILE=${16}
-BASE_DEPLOYMENT_URI=${17}
+SSH_KEYFILE=${5-'~/.ssh/id_rsa.pub'}
+DEPLOYMENT_STORAGE_BASEURI=$6
+DEPLOYMENT_STORAGE_SAS=$7
+DOCKER_HUB_USERNAME=${8}
+DOCKER_HUB_PASSWORD=${9}
+K8S_AGENT_COUNT=${10:-4}
+K8S_AGENT_VM_SIZE=${11:-'Standard_D2_v2'}
+GLUSTER_NODE_COUNT=${12:-4}
+GLUSTER_NODE_VM_SIZE=${13:-'Standard_D1_v2'}
+ACS_ENGINE_CONFIG_FILE=${14}
+BASE_DEPLOYMENT_URI=${15}
 
 if [ -z "$DEFAULT_BASE_URI" ]
 then
 	BASE_DEPLOYMENT_URI="https://raw.githubusercontent.com/jpoon/aurora_deploy/$(git rev-parse HEAD)/"
 fi
 
-NOW=`date +"%s"`
+## requirements
+which jq >/dev/null || (printf "Can not find the 'jq' program, please install it.\n" >&2 && exit 1)
+which azure >/dev/null || (printf "Can not find the 'azure' program, please install it.\n" >&2 exit 1)
 
+azure account show &>/dev/null || azure login
 SUBSCRIPTION_ID=`azure account list --json | jq -r '.[0].id'`
+
 # Statically assign IP addresses to master node(s)
 K8S_MASTER_IP_START="10.0.1.100"
 # Statically assign IP address to LB (so we can specify it to the Ingress apps)
 PACHYDERM_ENDPOINT="10.0.1.250"
 
 BASE_OUT_DIR="/tmp/deploy_aurora"
-mkdir $BASE_OUT_DIR
+mkdir -p $BASE_OUT_DIR
 SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 K8S_DEPLOYMENT_FILE="$BASE_OUT_DIR/kube-acsengine-$NOW.json"
 ACS_ENGINE_OUTPUT_DIR="$BASE_OUT_DIR/output/kube-config-$NOW"
+
+# Service Principal
+raw_json=$(./create_service_principal.sh --subscription-id=$SUBSCRIPTION_ID --name=$BASENAME --app-url="http://"$BASENAME --secret=$NOW --output-format=json)
+SERVICE_PRINCIPAL_ID=$(echo $raw_json | jq -r .app_id)
+SERVICE_PRINCIPAL_SECRET=$(echo $raw_json | jq -r .client_secret)
 
 SSH_KEY=`cat $SSH_KEYFILE`
 # Generate keypair for internal VM communication
