@@ -5,7 +5,7 @@ BASENAME=${1}
 RESOURCE_GROUP=${2}
 REGION=${3}
 ADMIN_NAME=${4}
-SSH_KEYFILE=${5}
+SSH_KEYFILE=${5:-'~/.ssh/id_rsa.pub'}
 SERVICE_PRINCIPAL_SECRET=${6}
 DEPLOYMENT_STORAGE_BASEURI=${7}
 DEPLOYMENT_STORAGE_SAS=${8}
@@ -16,7 +16,11 @@ K8S_AGENT_VM_SIZE=${12:-'Standard_D2_v2'}
 GLUSTER_NODE_COUNT=${13:-4}
 GLUSTER_NODE_VM_SIZE=${14:-'Standard_D1_v2'}
 ACS_ENGINE_CONFIG_FILE=${15}
-BASE_DEPLOYMENT_URI=${16:-'https://raw.githubusercontent.com/jpoon/aurora_deploy/master/'}
+BASE_DEPLOYMENT_URI=${16}
+
+if [ -z "$BASE_DEPLOYMENT_URI" ]; then  
+    BASE_DEPLOYMENT_URI="https://raw.githubusercontent.com/jpoon/aurora_deploy/$(git rev-parse HEAD)/"  
+fi  
 
 ## requirements
 which jq >/dev/null || (printf "Can not find the 'jq' program, please install it.\n" >&2 && exit 1)
@@ -34,7 +38,11 @@ K8S_MASTER_IP_START="10.0.1.100"
 SPN_NAME="http://Aurora_K8s_Controller"
 SPN_OBJECTID=`azure ad sp show -n $SPN_NAME --json | jq -r '.[].objectId'`
 if [[ ! $SPN_OBJECTID ]]; then
-    SPN_APPID=`azure ad app create -n "Aurora K8s Controller" -i "$SPN_NAME" -m "$SPN_NAME" -p "$SERVICE_PRINCIPAL_SECRET" --json | jq -r '.appId'`
+    # The Application could theoretically already exist
+    SPN_APPID=`azure ad app show -i "$SPN_NAME" --json | jq -r '.[0].appId'`
+    if [[ ! $SPN_APPID ]]; then 
+        SPN_APPID=`azure ad app create -n "Aurora K8s Controller" -i "$SPN_NAME" -m "$SPN_NAME" -p "$SERVICE_PRINCIPAL_SECRET" --json | jq -r '.appId'`
+    fi
     SPN_OBJECTID=`azure ad sp create -a "$SPN_APPID" --json | jq -r '.objectId'`
 else
     SPN_APPID=`azure ad sp show -o $SPN_OBJECTID --json | jq -r '.[0].appId'`
