@@ -1,31 +1,38 @@
 #! /bin/bash
 
 # Shared config information
-BASENAME=$1
-RESOURCE_GROUP=$2
-REGION=$3
-ADMIN_NAME=$4
-SSH_KEYFILE=$5
-SERVICE_PRINCIPAL_ID=$6
-SERVICE_PRINCIPAL_SECRET=$7
-DEPLOYMENT_STORAGE_BASEURI=$8
-DEPLOYMENT_STORAGE_SAS=$9
-DOCKER_HUB_USERNAME=$10
-DOCKER_HUB_PASSWORD=$11
-K8S_AGENT_COUNT=${12:-4}
-K8S_AGENT_VM_SIZE=${13:-'Standard_D2_v2'}
-GLUSTER_NODE_COUNT=${14:-4}
-GLUSTER_NODE_VM_SIZE=${15:-'Standard_D1_v2'}
-ACS_ENGINE_CONFIG_FILE=$16
-BASE_DEPLOYMENT_URI=${17:-'https://raw.githubusercontent.com/jpoon/aurora_deploy/master/'}
+BASENAME=${1}
+RESOURCE_GROUP=${2}
+REGION=${3}
+ADMIN_NAME=${4}
+SSH_KEYFILE=${5}
+SERVICE_PRINCIPAL_SECRET=${6}
+DEPLOYMENT_STORAGE_BASEURI=${7}
+DEPLOYMENT_STORAGE_SAS=${8}
+DOCKER_HUB_USERNAME=${9}
+DOCKER_HUB_PASSWORD=${10}
+K8S_AGENT_COUNT=${11:-4}
+K8S_AGENT_VM_SIZE=${12:-'Standard_D2_v2'}
+GLUSTER_NODE_COUNT=${13:-4}
+GLUSTER_NODE_VM_SIZE=${14:-'Standard_D1_v2'}
+ACS_ENGINE_CONFIG_FILE=${15}
+BASE_DEPLOYMENT_URI=${16:-'https://raw.githubusercontent.com/jpoon/aurora_deploy/master/'}
 
 NOW=`date +"%s"`
 
-SUBSCRIPTION_ID=`azure account list --json | jq -r '.[0].id'`
+SUBSCRIPTION_ID=`azure account show --json | jq -r '.[].id'`
 # Statically assign IP addresses to master node(s)
 K8S_MASTER_IP_START="10.0.1.100"
-# Statically assign IP address to LB (so we can specify it to the Ingress apps)
-PACHYDERM_ENDPOINT="10.0.1.250"
+
+# Create the Service Principal
+SPN_NAME="http://Aurora_K8s_Controller"
+SPN_OBJECTID=`azure ad sp show -n $SPN_NAME --json | jq -r '.[].objectId'`
+if [[ ! $SPN_OBJECTID ]]; then
+    SPN_APPID=`azure ad app create -n "Aurora K8s Controller" -i "$SPN_NAME" -m "$SPN_NAME" -p "$SERVICE_PRINCIPAL_SECRET" --json | jq -r '.appId'`
+    SPN_OBJECTID=`azure ad sp create -a "$SPN_APPID" --json | jq -r '.objectId'`
+else
+    SPN_APPID=`azure ad sp show -o $SPN_OBJECTID --json | jq -r '.[0].appId'`
+fi
 
 BASE_OUT_DIR="/tmp/deploy_aurora"
 mkdir $BASE_OUT_DIR
@@ -54,7 +61,7 @@ cat $ACS_ENGINE_CONFIG_FILE \
     | sed "s/@@KUBERNETES_SUBNET@@/kubernetes/g" \
     | sed "s/@@K8S_MASTER_IP_START@@/$K8S_MASTER_IP_START/g" \
     | sed "s/@@ADMIN_NAME@@/$ADMIN_NAME/g" \
-    | sed "s/@@SERVICE_PRINCIPAL_ID@@/$SERVICE_PRINCIPAL_ID/g" \
+    | sed "s/@@SERVICE_PRINCIPAL_ID@@/$SPN_APPID/g" \
     | sed "s/@@SERVICE_PRINCIPAL_SECRET@@/$SERVICE_PRINCIPAL_SECRET/g" \
     | sed "s~@@SSH_KEY@@~$INTERNAL_SSH_PUBLIC_KEY~g" \
     | tee $K8S_DEPLOYMENT_FILE
@@ -83,6 +90,7 @@ curl -X PUT -d @"$ACS_ENGINE_OUTPUT_DIR/azuredeploy.json" -H "date:$(date -u +%a
 curl -X PUT -d @"$ACS_ENGINE_OUTPUT_DIR/acs-azuredeploy.parameters.json" -H "date:$(date -u +%a,\ %d\ %b\ %Y\ %H:%M:%S\ GMT)" -H "x-ms-blob-type:BlockBlob" -H "x-ms-version:2012-02-12" $ACS_PARAMETERS_URI
 
 echo "Invoking ARM E2E template"
+BASE_DEPLOYMENT_URI="${BASE_DEPLOYMENT_URI%%+(/)}/"
 # Generate parameters file
 cat << EOF > $BASE_OUT_DIR/orchestrator.parameters.json
 {
@@ -117,10 +125,12 @@ cat << EOF > $BASE_OUT_DIR/orchestrator.parameters.json
     "value": "$ACS_PARAMETERS_URI"
   },
   "pachydermAddress": {
-    "value": "$PACHYDERM_ENDPOINT:650"
+    "value": "$K8S_MASTER_IP_START:30650"
   }
 }
 EOF
 # Now invoke ARM
 azure group create --name "$RESOURCE_GROUP" --location "$REGION"
+# Do the RBAC assignment, now that we've created the resource group
+azure role assignment create --objectId "$SPN_OBJECTID" --roleName "Contributor" --scope "/subscriptions/$SUBSCRIPTION_ID/resourceGroups/$RESOURCE_GROUP"
 azure group deployment create --name="aurora" --resource-group="$RESOURCE_GROUP" --template-file="$SCRIPT_DIR/orchestrator.json" --parameters-file="$BASE_OUT_DIR/orchestrator.parameters.json"

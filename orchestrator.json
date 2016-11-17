@@ -303,7 +303,7 @@
         },
         {
             "type": "Microsoft.Compute/virtualMachines/extensions",
-            "name": "IngressVM/InstallIngress",
+            "name": "ingress-vm/InstallIngress",
             "location": "[resourceGroup().location]",
             "apiVersion": "2015-06-15",
             "dependsOn": [

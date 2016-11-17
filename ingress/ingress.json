@@ -126,7 +126,7 @@
                         "properties": {
                             "privateIPAllocationMethod": "Dynamic",
                             "publicIPAddress": {
-                                "id": "[resourceId('Microsoft.Network/publicIPAddresses', 'IngressIP')]"
+                                "id": "[resourceId('Microsoft.Network/publicIPAddresses', 'ingress-ip')]"
                             },
                             "subnet": {
                                 "id": "[variables('subnetRef')]"
@@ -135,12 +135,12 @@
                     }
                 ],
                 "networkSecurityGroup": {
-                    "id": "[resourceId('Microsoft.Network/networkSecurityGroups', 'IngressNSG')]"
+                    "id": "[resourceId('Microsoft.Network/networkSecurityGroups', 'ingress-nsg')]"
                 }
             },
             "dependsOn": [
-                "Microsoft.Network/publicIPAddresses/IngressIP",
-                "Microsoft.Network/networkSecurityGroups/IngressNSG"
+                "Microsoft.Network/publicIPAddresses/ingress-ip",
+                "Microsoft.Network/networkSecurityGroups/ingress-nsg"
             ]
         },
         {
@@ -191,7 +191,7 @@
                 "networkProfile": {
                     "networkInterfaces": [
                         {
-                            "id": "[resourceId('Microsoft.Network/networkInterfaces', 'IngressNic')]"
+                            "id": "[resourceId('Microsoft.Network/networkInterfaces', 'ingress-nic')]"
                         }
                     ]
                 }
@@ -199,7 +199,7 @@
             "resources": [
                 {
                     "type": "Microsoft.Compute/virtualMachines/extensions",
-                    "name": "IngressVM/InstallDocker",
+                    "name": "ingress-vm/InstallDocker",
                     "apiVersion": "2015-06-15",
                     "location": "[resourceGroup().location]",
                     "properties": {
@@ -210,12 +210,12 @@
                         "settings": {}
                     },
                     "dependsOn": [
-                        "Microsoft.Compute/virtualMachines/IngressVM"
+                        "Microsoft.Compute/virtualMachines/ingress-vm"
                     ]
                 }
             ],
             "dependsOn": [
-                "Microsoft.Network/networkInterfaces/IngressNic"
+                "Microsoft.Network/networkInterfaces/ingress-nic"
             ]
         }
     ]
