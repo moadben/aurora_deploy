@@ -199,7 +199,7 @@
             "resources": [
                 {
                     "type": "Microsoft.Compute/virtualMachines/extensions",
-                    "name": "ingress-vm/InstallDocker",
+                    "name": "ingress-vm/install-docker",
                     "apiVersion": "2015-06-15",
                     "location": "[resourceGroup().location]",
                     "properties": {

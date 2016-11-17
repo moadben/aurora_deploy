@@ -1,5 +1,7 @@
 #! /bin/bash
 
+NOW=`date +"%s"`
+
 # Shared config information
 BASENAME=${1}
 RESOURCE_GROUP=${2}
@@ -18,9 +20,13 @@ GLUSTER_NODE_VM_SIZE=${14:-'Standard_D1_v2'}
 ACS_ENGINE_CONFIG_FILE=${15}
 BASE_DEPLOYMENT_URI=${16:-'https://raw.githubusercontent.com/jpoon/aurora_deploy/master/'}
 
-NOW=`date +"%s"`
+## requirements
+which jq >/dev/null || (printf "Can not find the 'jq' program, please install it.\n" >&2 && exit 1)
+which azure >/dev/null || (printf "Can not find the 'azure' program, please install it.\n" >&2 exit 1)
 
+azure account show &>/dev/null || azure login
 SUBSCRIPTION_ID=`azure account show --json | jq -r '.[].id'`
+
 # Statically assign IP addresses to master node(s)
 K8S_MASTER_IP_START="10.0.1.100"
 
@@ -35,7 +41,7 @@ else
 fi
 
 BASE_OUT_DIR="/tmp/deploy_aurora"
-mkdir $BASE_OUT_DIR
+mkdir -p $BASE_OUT_DIR
 SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 K8S_DEPLOYMENT_FILE="$BASE_OUT_DIR/kube-acsengine-$NOW.json"
 ACS_ENGINE_OUTPUT_DIR="$BASE_OUT_DIR/output/kube-config-$NOW"
@@ -86,8 +92,8 @@ DEPLOYMENT_STORAGE_BASEURI="${DEPLOYMENT_STORAGE_BASEURI%%+(/)}"
 ACS_TEMPLATE_URI="$DEPLOYMENT_STORAGE_BASEURI/azuredeploy-$NOW.json$DEPLOYMENT_STORAGE_SAS"
 ACS_PARAMETERS_URI="$DEPLOYMENT_STORAGE_BASEURI/azuredeploy-$NOW.parameters.json$DEPLOYMENT_STORAGE_SAS"
 
-curl -X PUT -d @"$ACS_ENGINE_OUTPUT_DIR/azuredeploy.json" -H "date:$(date -u +%a,\ %d\ %b\ %Y\ %H:%M:%S\ GMT)" -H "x-ms-blob-type:BlockBlob" -H "x-ms-version:2012-02-12" $ACS_TEMPLATE_URI
-curl -X PUT -d @"$ACS_ENGINE_OUTPUT_DIR/acs-azuredeploy.parameters.json" -H "date:$(date -u +%a,\ %d\ %b\ %Y\ %H:%M:%S\ GMT)" -H "x-ms-blob-type:BlockBlob" -H "x-ms-version:2012-02-12" $ACS_PARAMETERS_URI
+curl -X PUT -d @"$ACS_ENGINE_OUTPUT_DIR/azuredeploy.json" -H "x-ms-blob-type: BlockBlob" $ACS_TEMPLATE_URI
+curl -X PUT -d @"$ACS_ENGINE_OUTPUT_DIR/acs-azuredeploy.parameters.json" -H "x-ms-blob-type: BlockBlob" $ACS_PARAMETERS_URI
 
 echo "Invoking ARM E2E template"
 BASE_DEPLOYMENT_URI="${BASE_DEPLOYMENT_URI%%+(/)}/"
