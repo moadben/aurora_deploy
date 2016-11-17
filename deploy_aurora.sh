@@ -1,7 +1,5 @@
 #! /bin/bash
 
-NOW=`date +"%s"`
-
 # Shared config information
 BASENAME=${1}
 RESOURCE_GROUP=${2}
@@ -26,6 +24,8 @@ which azure >/dev/null || (printf "Can not find the 'azure' program, please inst
 
 azure account show &>/dev/null || azure login
 SUBSCRIPTION_ID=`azure account show --json | jq -r '.[].id'`
+
+NOW=`date +"%s"`
 
 # Statically assign IP addresses to master node(s)
 K8S_MASTER_IP_START="10.0.1.100"
@@ -77,13 +77,14 @@ echo "Executing acs-engine to generate K8s config"
 
 echo "Moving ACS K8S deployment assets to storage account"
 # Parameter Link files need a slightly different format
-cat << EOF > $ACS_ENGINE_OUTPUT_DIR/acs-azuredeploy.parameters.json 
-{
-  "\$schema": "http://schema.management.azure.com/schemas/2015-01-01/deploymentParameters.json#",
-  "contentVersion": "1.0.0.0",
-  "parameters": $(cat $ACS_ENGINE_OUTPUT_DIR/azuredeploy.parameters.json)
-}
-EOF
+# Also add the nameSuffix parameter so that we can predict the name of resources created by the acs-engine generated template
+cat $ACS_ENGINE_OUTPUT_DIR/azuredeploy.parameters.json | jq '
+  .nameSuffix={"value":"'$NOW'"} | 
+  {
+      "$schema": "http://schema.management.azure.com/schemas/2015-01-01/deploymentParameters.json#", 
+      "contentVersion": "1.0.0.0", 
+      "parameters": . 
+  }' > $ACS_ENGINE_OUTPUT_DIR/acs-azuredeploy.parameters.json
 
 if [[ $DEPLOYMENT_STORAGE_SAS && ${DEPLOYMENT_STORAGE_SAS:0:1} != '?' ]]; then
     DEPLOYMENT_STORAGE_SAS="?$DEPLOYMENT_STORAGE_SAS"
@@ -129,6 +130,9 @@ cat << EOF > $BASE_OUT_DIR/orchestrator.parameters.json
   }, 
   "k8sParametersLink": {
     "value": "$ACS_PARAMETERS_URI"
+  },
+  "k8sNameSuffix": {
+    "value": "$NOW"
   },
   "pachydermAddress": {
     "value": "$K8S_MASTER_IP_START:30650"
