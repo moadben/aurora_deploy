@@ -36,7 +36,6 @@ NOW=`date +"%s"`
 K8S_MASTER_IP_START="10.0.1.100"
 
 # Create the Service Principal
-SPN_NAME="http://Aurora_K8s_Controller"
 SPN_OBJECTID=`azure ad sp show -n $SPN_NAME --json | jq -r '.[].objectId'`
 if [[ ! $SPN_OBJECTID ]]; then
     # The Application could theoretically already exist
