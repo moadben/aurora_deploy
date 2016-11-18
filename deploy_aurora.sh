@@ -17,6 +17,7 @@ GLUSTER_NODE_COUNT=${13:-4}
 GLUSTER_NODE_VM_SIZE=${14:-'Standard_D1_v2'}
 ACS_ENGINE_CONFIG_FILE=${15}
 BASE_DEPLOYMENT_URI=${16}
+SPN_NAME=${17:-'http://Aurora_K8s_Controller'}
 
 if [ -z "$BASE_DEPLOYMENT_URI" ]; then  
     BASE_DEPLOYMENT_URI="https://raw.githubusercontent.com/jpoon/aurora_deploy/$(git rev-parse HEAD)/"  
@@ -46,6 +47,10 @@ if [[ ! $SPN_OBJECTID ]]; then
     SPN_OBJECTID=`azure ad sp create -a "$SPN_APPID" --json | jq -r '.objectId'`
 else
     SPN_APPID=`azure ad sp show -o $SPN_OBJECTID --json | jq -r '.[0].appId'`
+fi
+if [[ ! $SPN_APPID ]]; then
+    echo "FATAL: Failed to create/update required service principal." 1>&2
+    exit
 fi
 
 BASE_OUT_DIR="/tmp/deploy_aurora"
