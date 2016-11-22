@@ -1,6 +1,6 @@
-#! /bin/bash
+#!/bin/bash
 
-# Shared config information
+## Shared config information
 BASENAME=${1}
 RESOURCE_GROUP=${2}
 REGION=${3}
@@ -13,63 +13,63 @@ DOCKER_HUB_USERNAME=${9}
 DOCKER_HUB_PASSWORD=${10}
 K8S_AGENT_COUNT=${11:-4}
 K8S_AGENT_VM_SIZE=${12:-'Standard_D2_v2'}
-GLUSTER_NODE_COUNT=${13:-4}
-GLUSTER_NODE_VM_SIZE=${14:-'Standard_D1_v2'}
-ACS_ENGINE_CONFIG_FILE=${15}
-BASE_DEPLOYMENT_URI=${16}
-SPN_NAME=${17:-'http://Aurora_K8s_Controller'}
+ACS_ENGINE_CONFIG_FILE=${13}
+BASE_DEPLOYMENT_URI=${14}
+SPN_NAME=${15:-'http://Aurora_K8s_Controller_JaPoon'}
 
 if [ -z "$BASE_DEPLOYMENT_URI" ]; then  
     BASE_DEPLOYMENT_URI="https://raw.githubusercontent.com/jpoon/aurora_deploy/$(git rev-parse HEAD)/"  
 fi  
 
-## requirements
-which jq >/dev/null || (printf "Can not find the 'jq' program, please install it.\n" >&2 && exit 1)
-which azure >/dev/null || (printf "Can not find the 'azure' program, please install it.\n" >&2 exit 1)
+## Pre-requisites
+hash jq >/dev/null || (echo "Can not find the 'jq' program, please install it." >&2 && exit 1)
+hash azure >/dev/null || (echo "Can not find the 'azure' program, please install it." >&2 exit 1)
 
+## Azure Login
 azure account show &>/dev/null || azure login
-SUBSCRIPTION_ID=`azure account show --json | jq -r '.[].id'`
+SUBSCRIPTION_ID=$(azure account show --json | jq -r '.[].id')
 
-NOW=`date +"%s"`
+NOW=$(date +"%s")
 
-# Statically assign IP addresses to master node(s)
+## Statically assign IP addresses to master node(s)
 K8S_MASTER_IP_START="10.0.1.100"
 
-# Create the Service Principal
-SPN_OBJECTID=`azure ad sp show -n $SPN_NAME --json | jq -r '.[].objectId'`
+## Create the Service Principal
+echo "--- Create Service Principal"
+SPN_OBJECTID=$(azure ad sp show -n "$SPN_NAME" --json | jq -r '.[].objectId')
 if [[ ! $SPN_OBJECTID ]]; then
     # The Application could theoretically already exist
-    SPN_APPID=`azure ad app show -i "$SPN_NAME" --json | jq -r '.[0].appId'`
+    SPN_APPID=$(azure ad app show -i "$SPN_NAME" --json | jq -r '.[0].appId')
     if [[ ! $SPN_APPID ]]; then 
-        SPN_APPID=`azure ad app create -n "Aurora K8s Controller" -i "$SPN_NAME" -m "$SPN_NAME" -p "$SERVICE_PRINCIPAL_SECRET" --json | jq -r '.appId'`
+        SPN_APPID=$(azure ad app create -n "Aurora K8s Controller" -i "$SPN_NAME" -m "$SPN_NAME" -p "$SERVICE_PRINCIPAL_SECRET" --json | jq -r '.appId')
     fi
-    SPN_OBJECTID=`azure ad sp create -a "$SPN_APPID" --json | jq -r '.objectId'`
+    SPN_OBJECTID=$(azure ad sp create -a "$SPN_APPID" --json | jq -r '.objectId')
 else
-    SPN_APPID=`azure ad sp show -o $SPN_OBJECTID --json | jq -r '.[0].appId'`
+    SPN_APPID=$(azure ad sp show -o "$SPN_OBJECTID" --json | jq -r '.[0].appId')
 fi
 if [[ ! $SPN_APPID ]]; then
-    echo "FATAL: Failed to create/update required service principal." 1>&2
-    exit
+    echo "FATAL: Failed to create/update required service principal." >&2 && exit 1
 fi
 
-BASE_OUT_DIR="/tmp/deploy_aurora"
-mkdir -p $BASE_OUT_DIR
+BASE_OUT_DIR="/tmp/deploy_aurora/$NOW"
+mkdir -p "$BASE_OUT_DIR"
 SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
-K8S_DEPLOYMENT_FILE="$BASE_OUT_DIR/kube-acsengine-$NOW.json"
-ACS_ENGINE_OUTPUT_DIR="$BASE_OUT_DIR/output/kube-config-$NOW"
+K8S_DEPLOYMENT_FILE="$BASE_OUT_DIR/kube-acsengine.json"
+ACS_ENGINE_OUTPUT_DIR="$BASE_OUT_DIR/kube-config"
 
-SSH_KEY=`cat $SSH_KEYFILE`
+echo "--- Create SSH Keys"
+SSH_KEY=$(cat "$SSH_KEYFILE")
 # Generate keypair for internal VM communication
-INTERNAL_KEY_FILE=$BASE_OUT_DIR/id_rsa-$NOW
-ssh-keygen -f $INTERNAL_KEY_FILE -N ""
-INTERNAL_SSH_PRIVATE_KEY=`cat $INTERNAL_KEY_FILE | sed '$d' | sed '1d' | tr -d '\n'`
-INTERNAL_SSH_PUBLIC_KEY=`cat $INTERNAL_KEY_FILE.pub | tr -d '\n'`
+INTERNAL_KEY_FILE=$BASE_OUT_DIR/id_rsa
+ssh-keygen -f "$INTERNAL_KEY_FILE" -N ""
+INTERNAL_SSH_PRIVATE_KEY=$(cat "$INTERNAL_KEY_FILE" | sed '$d' | sed '1d' | tr -d '\n')
+INTERNAL_SSH_PUBLIC_KEY=$(cat "$INTERNAL_KEY_FILE".pub | tr -d '\n')
 
-echo "Generating acs-engine config."
+echo "--- Generating Configs for ACS-Engine"
 if [[ ! $ACS_ENGINE_CONFIG_FILE ]]; then
     ACS_ENGINE_CONFIG_FILE=$SCRIPT_DIR/k8s/config/kubernetesvnet.json
 fi
-cat $ACS_ENGINE_CONFIG_FILE \
+cat "$ACS_ENGINE_CONFIG_FILE" \
     | sed "s/@@RESOURCE_GROUP@@/$RESOURCE_GROUP/g" \
     | sed "s/@@DNS_PREFIX@@/$BASENAME/g" \
     | sed "s/@@SUBSCRIPTION_ID@@/$SUBSCRIPTION_ID/g" \
@@ -82,36 +82,36 @@ cat $ACS_ENGINE_CONFIG_FILE \
     | sed "s/@@SERVICE_PRINCIPAL_ID@@/$SPN_APPID/g" \
     | sed "s/@@SERVICE_PRINCIPAL_SECRET@@/$SERVICE_PRINCIPAL_SECRET/g" \
     | sed "s~@@SSH_KEY@@~$INTERNAL_SSH_PUBLIC_KEY~g" \
-    | tee $K8S_DEPLOYMENT_FILE
+    | tee "$K8S_DEPLOYMENT_FILE"
 
-echo "Executing acs-engine to generate K8s config"
-"$SCRIPT_DIR/k8s/bin/acs-engine" -artifacts $ACS_ENGINE_OUTPUT_DIR $K8S_DEPLOYMENT_FILE
+echo "--- Generating Kubernetes Configs"
+"$SCRIPT_DIR/k8s/bin/osx/acs-engine" -artifacts "$ACS_ENGINE_OUTPUT_DIR" "$K8S_DEPLOYMENT_FILE"
 
-echo "Moving ACS K8S deployment assets to storage account"
+echo "--- ACS-Engine: Moving ACS K8S deployment assets to storage account"
 # Parameter Link files need a slightly different format
 # Also add the nameSuffix parameter so that we can predict the name of resources created by the acs-engine generated template
-cat $ACS_ENGINE_OUTPUT_DIR/azuredeploy.parameters.json | jq '
+cat "$ACS_ENGINE_OUTPUT_DIR"/azuredeploy.parameters.json | jq '
   .nameSuffix={"value":"'$NOW'"} | 
   {
       "$schema": "http://schema.management.azure.com/schemas/2015-01-01/deploymentParameters.json#", 
       "contentVersion": "1.0.0.0", 
       "parameters": . 
-  }' > $ACS_ENGINE_OUTPUT_DIR/acs-azuredeploy.parameters.json
+  }' > "$ACS_ENGINE_OUTPUT_DIR"/acs-azuredeploy.parameters.json
 
 if [[ $DEPLOYMENT_STORAGE_SAS && ${DEPLOYMENT_STORAGE_SAS:0:1} != '?' ]]; then
     DEPLOYMENT_STORAGE_SAS="?$DEPLOYMENT_STORAGE_SAS"
 fi
 DEPLOYMENT_STORAGE_BASEURI="${DEPLOYMENT_STORAGE_BASEURI%%+(/)}"
-ACS_TEMPLATE_URI="$DEPLOYMENT_STORAGE_BASEURI/azuredeploy-$NOW.json$DEPLOYMENT_STORAGE_SAS"
-ACS_PARAMETERS_URI="$DEPLOYMENT_STORAGE_BASEURI/azuredeploy-$NOW.parameters.json$DEPLOYMENT_STORAGE_SAS"
+ACS_TEMPLATE_URI="$DEPLOYMENT_STORAGE_BASEURI/$NOW/azuredeploy.json$DEPLOYMENT_STORAGE_SAS"
+ACS_PARAMETERS_URI="$DEPLOYMENT_STORAGE_BASEURI/$NOW/azuredeploy.parameters.json$DEPLOYMENT_STORAGE_SAS"
 
-curl -X PUT -d @"$ACS_ENGINE_OUTPUT_DIR/azuredeploy.json" -H "x-ms-blob-type: BlockBlob" $ACS_TEMPLATE_URI
-curl -X PUT -d @"$ACS_ENGINE_OUTPUT_DIR/acs-azuredeploy.parameters.json" -H "x-ms-blob-type: BlockBlob" $ACS_PARAMETERS_URI
+curl -X PUT -d @"$ACS_ENGINE_OUTPUT_DIR/azuredeploy.json" -H "x-ms-blob-type: BlockBlob" "$ACS_TEMPLATE_URI"
+curl -X PUT -d @"$ACS_ENGINE_OUTPUT_DIR/acs-azuredeploy.parameters.json" -H "x-ms-blob-type: BlockBlob" "$ACS_PARAMETERS_URI"
 
-echo "Invoking ARM E2E template"
+echo --- Invoking ARM E2E template
 BASE_DEPLOYMENT_URI="${BASE_DEPLOYMENT_URI%%+(/)}/"
 # Generate parameters file
-cat << EOF > $BASE_OUT_DIR/orchestrator.parameters.json
+cat << EOF > "$BASE_OUT_DIR"/orchestrator.parameters.json
 {
   "baseName": {
     "value": "$BASENAME"
