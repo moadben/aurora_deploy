@@ -17,7 +17,7 @@ ACS_ENGINE_CONFIG_FILE=${13}
 BASE_DEPLOYMENT_URI=${14}
 SPN_NAME=${15:-'http://Aurora_K8s_Controller'}
 
-if [ -z "$BASE_DEPLOYMENT_URI" ]; then  
+if [[ -z "$BASE_DEPLOYMENT_URI" ]]; then  
     BASE_DEPLOYMENT_URI="https://raw.githubusercontent.com/jpoon/aurora_deploy/$(git rev-parse HEAD)/"  
 fi  
 
