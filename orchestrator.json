@@ -24,7 +24,6 @@
         },
         "dockerHubUsername": {
             "type": "string",
-            "defaultValue": "generalfusionaurora",
             "metadata": {
                 "description": "Docker Hub account name to login to obtain docker packages"
             }

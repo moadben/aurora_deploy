@@ -1,8 +1,8 @@
 #!/bin/bash
 
-account=`echo $1 | base64 -w 0`
-container=`echo $2 | base64 -w 0`
-storagekey=`echo $3 | base64 -w 0`
+account=`echo -n $1 | base64 -w 0`
+container=`echo -n $2 | base64 -w 0`
+storagekey=`echo -n $3 | base64 -w 0`
 
 manifest_file=/tmp/pach.manifest
 
