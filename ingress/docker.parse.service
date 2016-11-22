@@ -1,0 +1,17 @@
+[Unit]
+Description=Ingress Start for Parse Container
+After=docker.service
+Requires=docker.service
+
+[Service]
+TimeoutStartSec=0
+Restart=always
+EnvironmentFile=/etc/aurora/aurora.conf
+Environment=CONTAINER=parse
+ExecStartPre=/usr/bin/docker login -u $DOCKERHUB_USER -p $DOCKERHUB_PASSWORD
+ExecStart=/usr/bin/docker run -t --name $CONTAINER generalfusion/parse:latest ash
+ExecStop=/usr/bin/docker kill $CONTAINER
+ExecStopPost=/usr/bin/docker rm $CONTAINER
+
+[Install]
+WantedBy=multi-user.target
