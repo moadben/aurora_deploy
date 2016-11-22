@@ -15,7 +15,7 @@ K8S_AGENT_COUNT=${11:-4}
 K8S_AGENT_VM_SIZE=${12:-'Standard_D2_v2'}
 ACS_ENGINE_CONFIG_FILE=${13}
 BASE_DEPLOYMENT_URI=${14}
-SPN_NAME=${15:-'http://Aurora_K8s_Controller_JaPoon'}
+SPN_NAME=${15:-'http://Aurora_K8s_Controller'}
 
 if [ -z "$BASE_DEPLOYMENT_URI" ]; then  
     BASE_DEPLOYMENT_URI="https://raw.githubusercontent.com/jpoon/aurora_deploy/$(git rev-parse HEAD)/"  
