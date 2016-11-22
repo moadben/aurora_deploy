@@ -85,7 +85,7 @@ cat "$ACS_ENGINE_CONFIG_FILE" \
     | tee "$K8S_DEPLOYMENT_FILE"
 
 echo "--- Generating Kubernetes Configs"
-"$SCRIPT_DIR/k8s/bin/osx/acs-engine" -artifacts "$ACS_ENGINE_OUTPUT_DIR" "$K8S_DEPLOYMENT_FILE"
+"$SCRIPT_DIR/k8s/bin/linux/acs-engine" -artifacts "$ACS_ENGINE_OUTPUT_DIR" "$K8S_DEPLOYMENT_FILE"
 
 echo "--- ACS-Engine: Moving ACS K8S deployment assets to storage account"
 # Parameter Link files need a slightly different format
