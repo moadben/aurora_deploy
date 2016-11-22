@@ -9,8 +9,8 @@ SSH_KEYFILE=${5:-'~/.ssh/id_rsa.pub'}
 SERVICE_PRINCIPAL_SECRET=${6}
 DEPLOYMENT_STORAGE_BASEURI=${7}
 DEPLOYMENT_STORAGE_SAS=${8}
-DOCKER_HUB_USERNAME=${9}
-DOCKER_HUB_PASSWORD=${10}
+GLOBAL_RESOURCE_GROUP=${9}
+CONTAINER_REGISTRY=${10}
 K8S_AGENT_COUNT=${11:-4}
 K8S_AGENT_VM_SIZE=${12:-'Standard_D2_v2'}
 GLUSTER_NODE_COUNT=${13:-4}
@@ -123,10 +123,10 @@ cat << EOF > $BASE_OUT_DIR/orchestrator.parameters.json
     "value": "$SSH_KEY"
   },
   "dockerHubUsername": {
-    "value": "$DOCKER_HUB_USERNAME"
+    "value": "$SPN_APPID"
   }, 
   "dockerHubPassword": {
-    "value": "$DOCKER_HUB_PASSWORD"
+    "value": "$SERVICE_PRINCIPAL_SECRET"
   },
   "internalSshPublicKey": {
     "value": "$INTERNAL_SSH_PUBLIC_KEY"
@@ -155,4 +155,5 @@ EOF
 azure group create --name "$RESOURCE_GROUP" --location "$REGION"
 # Do the RBAC assignment, now that we've created the resource group
 azure role assignment create --objectId "$SPN_OBJECTID" --roleName "Contributor" --scope "/subscriptions/$SUBSCRIPTION_ID/resourceGroups/$RESOURCE_GROUP"
+azure role assignment create --objectId "$SPN_OBJECTID" --roleName "Contributor" --scope "/subscriptions/$SUBSCRIPTION_ID/resourceGroups/$GLOBAL_RESOURCE_GROUP/providers/Microsoft.ContainerRegistry/registries/$CONTAINER_REGISTRY"
 azure group deployment create --name="aurora" --resource-group="$RESOURCE_GROUP" --template-file="$SCRIPT_DIR/orchestrator.json" --parameters-file="$BASE_OUT_DIR/orchestrator.parameters.json"
