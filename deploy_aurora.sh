@@ -155,5 +155,10 @@ EOF
 azure group create --name "$RESOURCE_GROUP" --location "$REGION"
 # Do the RBAC assignment, now that we've created the resource group
 azure role assignment create --objectId "$SPN_OBJECTID" --roleName "Contributor" --scope "/subscriptions/$SUBSCRIPTION_ID/resourceGroups/$RESOURCE_GROUP"
-azure role assignment create --objectId "$SPN_OBJECTID" --roleName "Contributor" --scope "/subscriptions/$SUBSCRIPTION_ID/resourceGroups/$GLOBAL_RESOURCE_GROUP/providers/Microsoft.ContainerRegistry/registries/$CONTAINER_REGISTRY"
+
+ACR_ROLE_EXISTS=`azure role assignment list --objectId "$SPN_OBJECTID" --scope "/subscriptions/$SUBSCRIPTION_ID/resourceGroups/$GLOBAL_RESOURCE_GROUP/providers/Microsoft.ContainerRegistry/registries/$CONTAINER_REGISTRY" --json | jq 'length'`
+if [[ ! ACR_ROLE_EXISTS ]]; then
+    azure role assignment create --objectId "$SPN_OBJECTID" --roleName "Contributor" --scope "/subscriptions/$SUBSCRIPTION_ID/resourceGroups/$GLOBAL_RESOURCE_GROUP/providers/Microsoft.ContainerRegistry/registries/$CONTAINER_REGISTRY"
+fi
+
 azure group deployment create --name="aurora" --resource-group="$RESOURCE_GROUP" --template-file="$SCRIPT_DIR/orchestrator.json" --parameters-file="$BASE_OUT_DIR/orchestrator.parameters.json"
