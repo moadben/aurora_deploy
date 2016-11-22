@@ -157,7 +157,7 @@ azure group create --name "$RESOURCE_GROUP" --location "$REGION"
 azure role assignment create --objectId "$SPN_OBJECTID" --roleName "Contributor" --scope "/subscriptions/$SUBSCRIPTION_ID/resourceGroups/$RESOURCE_GROUP"
 
 ACR_ROLE_EXISTS=`azure role assignment list --objectId "$SPN_OBJECTID" --scope "/subscriptions/$SUBSCRIPTION_ID/resourceGroups/$GLOBAL_RESOURCE_GROUP/providers/Microsoft.ContainerRegistry/registries/$CONTAINER_REGISTRY" --json | jq 'length'`
-if [[ ! ACR_ROLE_EXISTS ]]; then
+if [[ ! $ACR_ROLE_EXISTS ]]; then
     azure role assignment create --objectId "$SPN_OBJECTID" --roleName "Contributor" --scope "/subscriptions/$SUBSCRIPTION_ID/resourceGroups/$GLOBAL_RESOURCE_GROUP/providers/Microsoft.ContainerRegistry/registries/$CONTAINER_REGISTRY"
 fi
 
