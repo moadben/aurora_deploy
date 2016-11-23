@@ -28,6 +28,9 @@ echo "DB_WAVE_COLN=$6" >> $conf_file
 echo "DB_VERSION_COLN=$7" >> $conf_file
 echo "PRESENCE_PORT=${8:-6429}" >> $conf_file
 echo "TOPACH_PORT=${9:-4242}" >> $conf_file
+echo "DOCKER_HOST=aurora-itadministrationgeneralfusi.azurecr.io" >> $conf_file
+
+
 systemctl daemon-reload
 systemctl enable docker.presence.service
 systemctl start docker.presence.service
