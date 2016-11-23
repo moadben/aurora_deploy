@@ -30,6 +30,7 @@ echo "PRESENCE_PORT=${8:-6429}" >> $conf_file
 echo "TOPACH_PORT=${9:-4242}" >> $conf_file
 echo "GF_DOCKER_LOGIN_SERVER=aurora-itadministrationgeneralfusi.azurecr.io" >> $conf_file
 echo "GF_DOCKER_REG_HOST=aurora-itadministrationgeneralfusi.azurecr.io" >> $conf_file
+echo "GF_DOCKER_TAG=latest" >> $conf_file
 
 
 systemctl daemon-reload

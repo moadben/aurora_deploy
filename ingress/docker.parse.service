@@ -9,7 +9,7 @@ Restart=always
 EnvironmentFile=/etc/aurora/aurora.conf
 Environment=CONTAINER=parse
 ExecStartPre=/usr/bin/docker login $GF_DOCKER_LOGIN_SERVER -u $DOCKERHUB_USER -p $DOCKERHUB_PASSWORD
-ExecStart=/usr/bin/docker run -t --name $CONTAINER ${GF_DOCKER_REG_HOST}/parse:latest ash
+ExecStart=/usr/bin/docker run -t --name $CONTAINER ${GF_DOCKER_REG_HOST}/${CONTAINER}:${GF_DOCKER_TAG} ash
 ExecStop=/usr/bin/docker kill $CONTAINER
 ExecStopPost=/usr/bin/docker rm $CONTAINER
 
