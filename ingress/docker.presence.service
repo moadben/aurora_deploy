@@ -8,8 +8,8 @@ TimeoutStartSec=0
 Restart=always
 EnvironmentFile=/etc/aurora/aurora.conf
 Environment=CONTAINER=presence
-ExecStartPre=/usr/bin/docker login $DOCKER_HOST -u $DOCKERHUB_USER -p $DOCKERHUB_PASSWORD
-ExecStart=/usr/bin/docker run -p ${PRESENCE_PORT}:${PRESENCE_PORT} --name $CONTAINER --entrypoint ./presence ${DOCKER_HOST}/presence:latest -a 0.0.0.0:${PRESENCE_PORT} -p $PACH_IP -c $DB_VERSION_COLN -d $DB_NAME -u $MONGO_URL
+ExecStartPre=/usr/bin/docker login $GF_DOCKER_LOGIN_SERVER -u $DOCKERHUB_USER -p $DOCKERHUB_PASSWORD
+ExecStart=/usr/bin/docker run -p ${PRESENCE_PORT}:${PRESENCE_PORT} --name $CONTAINER --entrypoint ./presence ${GF_DOCKER_REG_HOST}/presence:latest -a 0.0.0.0:${PRESENCE_PORT} -p $PACH_IP -c $DB_VERSION_COLN -d $DB_NAME -u $MONGO_URL
 ExecStop=/usr/bin/docker kill $CONTAINER
 ExecStopPost=/usr/bin/docker rm $CONTAINER
 
