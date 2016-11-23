@@ -11,8 +11,8 @@
 #   $7: Name of version metadata collection
 #   $8: Port number that Presence is listening on
 #   $9: Port number that ToPach is listening on
-cp ./docker.topach.service /etc/systemd/system/docker.topach.service
 cp ./docker.presence.service /etc/systemd/system/docker.presence.service
+cp ./docker.topach.service /etc/systemd/system/docker.topach.service
 cp ./docker.parse.service /etc/systemd/system/docker.parse.service
 
 
