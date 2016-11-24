@@ -21,8 +21,8 @@ conf_file=/etc/aurora/aurora.conf
 
 # Write arguments to config file
 # (Docker args prefixed with "GF" to avoid conflict with docker env vars)
-echo "GF_DOCKER_LOGIN_SERVER=${1}" >> $conf_file
-echo "GF_DOCKER_USER=${2}" > $conf_file
+echo "GF_DOCKER_LOGIN_SERVER=${1}" > $conf_file
+echo "GF_DOCKER_USER=${2}" >> $conf_file
 echo "GF_DOCKER_PASSWORD=${3}" >> $conf_file
 echo "GF_DOCKER_REGISTRY=${4}" >> $conf_file
 echo "GF_DOCKER_TAG=${5}" >> $conf_file
