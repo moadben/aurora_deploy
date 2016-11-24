@@ -353,7 +353,8 @@
                     "fileUris": [
                         "[concat(parameters('baseUri'), 'ingress/startup.sh')]",
                         "[concat(parameters('baseUri'), 'ingress/docker.presence.service')]",
-                        "[concat(parameters('baseUri'), 'ingress/docker.topach.service')]"
+                        "[concat(parameters('baseUri'), 'ingress/docker.topach.service')]",
+                        "[concat(parameters('baseUri'), 'ingress/docker.parse.service')]"
                     ],
                     "commandToExecute": "[concat('sh startup.sh \"', parameters('dockerHubUsername'), '\" \"', parameters('dockerHubPassword'), '\" \"', parameters('pachydermAddress'), '\" \"', reference('docdb').outputs.mongoUri.value, '\" \"', parameters('metadataDatabaseName'), '\" \"', parameters('waveCollection'), '\" \"', parameters('versionCollection'), '\" ', parameters('presencePortNumber'), ' ', parameters('toPachPortNumber'), ' && printf \"%s\\n%s\\n%s\\n\" ', '\"-----BEGIN RSA PRIVATE KEY-----\" \"', parameters('internalSshPrivateKey'), '\" \"-----END RSA PRIVATE KEY-----\" > /home/', parameters('adminUsername'), '/.ssh/id_rsa')]"
                 }
