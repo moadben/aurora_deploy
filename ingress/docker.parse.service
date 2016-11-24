@@ -11,7 +11,7 @@ Environment=CONTAINER=parse
 ExecStartPre=/usr/bin/docker login $GF_DOCKER_LOGIN_SERVER -u $DOCKERHUB_USER -p $DOCKERHUB_PASSWORD
 ExecStart=/usr/bin/docker run -t --net=host --name $CONTAINER ${GF_DOCKER_REG_HOST}/${CONTAINER}:${GF_DOCKER_TAG} ash
 ExecStop=/usr/bin/docker kill $CONTAINER
-ExecStopPost=/usr/bin/docker rm $CONTAINER
+ExecStopPost=/usr/bin/docker rm $CONTAINER ; /usr/bin/docker rmi ${GF_DOCKER_REG_HOST}/${CONTAINER}:${GF_DOCKER_TAG}
 
 [Install]
 WantedBy=multi-user.target
