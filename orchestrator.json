@@ -24,7 +24,7 @@
         },
         "dockerLoginServer": {
             "type": "string",
-            "default": "",
+            "defaultValue": "",
             "metadata": {
                 "description": "Login server for docker registry to pull images from"
             }
@@ -49,7 +49,7 @@
         },
         "dockerTag": {
             "type": "string",
-            "default": "latest",
+            "defaultValue": "latest",
             "metadata": {
                 "description": "Tag of server docker images to deploy (and track on restart)"
             }
