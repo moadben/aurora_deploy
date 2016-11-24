@@ -8,10 +8,10 @@ TimeoutStartSec=0
 Restart=always
 EnvironmentFile=/etc/aurora/aurora.conf
 Environment=CONTAINER=topach
-ExecStartPre=/usr/bin/docker login $GF_DOCKER_LOGIN_SERVER -u $DOCKERHUB_USER -p $DOCKERHUB_PASSWORD
-ExecStart=/usr/bin/docker run -p ${TOPACH_PORT}:${TOPACH_PORT} --net=host  --name $CONTAINER --entrypoint ./${CONTAINER} ${GF_DOCKER_REG_HOST}/${CONTAINER}:${GF_DOCKER_TAG} -p $PACH_IP -a 0.0.0.0:${TOPACH_PORT} -v localhost:${PRESENCE_PORT} -u $MONGO_URL -d $DB_NAME -c $DB_WAVE_COLN
+ExecStartPre=/usr/bin/docker login $GF_DOCKER_LOGIN_SERVER -u $GF_DOCKER_USER -p $GF_DOCKER_PASSWORD
+ExecStart=/usr/bin/docker run -p ${TOPACH_PORT}:${TOPACH_PORT} --net=host  --name $CONTAINER --entrypoint ./${CONTAINER} ${GF_DOCKER_REGISTRY}/${CONTAINER}:${GF_DOCKER_TAG} -p $PACHYDERM_ADDRESS -a 0.0.0.0:${TOPACH_PORT} -v localhost:${PRESENCE_PORT} -u $DB_MONGO_URL -d $DB_NAME -c $DB_WAVE_COLLECTION
 ExecStop=/usr/bin/docker kill $CONTAINER
-ExecStopPost=/usr/bin/docker rm $CONTAINER ; /usr/bin/docker rmi ${GF_DOCKER_REG_HOST}/${CONTAINER}:${GF_DOCKER_TAG}
+ExecStopPost=/usr/bin/docker rm $CONTAINER ; /usr/bin/docker rmi ${GF_DOCKER_REGISTRY}/${CONTAINER}:${GF_DOCKER_TAG}
 
 [Install]
 WantedBy=multi-user.target

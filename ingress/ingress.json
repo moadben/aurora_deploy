@@ -33,9 +33,8 @@
                 "description": "Unique DNS Name for the Storage Account where the Virtual Machine's disks will be placed."
             }
         },
-        "toPachPortNumber": {
+        "topachPort": {
             "type": "int",
-            "defaultValue": 4242,
             "metadata": {
                 "description": "Port number that ToPach will listen on (default: 4242)."
             }
@@ -103,7 +102,7 @@
                         "properties": {
                             "protocol": "TCP",
                             "sourcePortRange": "*",
-                            "destinationPortRange": "[parameters('toPachPortNumber')]",
+                            "destinationPortRange": "[parameters('topachPort')]",
                             "sourceAddressPrefix": "*",
                             "destinationAddressPrefix": "*",
                             "access": "Allow",
