@@ -21,7 +21,7 @@
     ],
     "outputs": {
         "mongoUri": {
-            "value": "[concat('mongodb://', parameters('docDbName'), ':', listKeys(resourceId('Microsoft.DocumentDB/databaseAccounts', parameters('docDbName')), '2015-04-08').primaryMasterKey, '@', parameters('docDbName'), '.documents.azure.com:10250/?ssl=true')]",
+            "value": "[concat('mongodb://', parameters('docDbName'), ':', listKeys(resourceId('Microsoft.DocumentDB/databaseAccounts', parameters('docDbName')), '2015-04-08').primaryMasterKey, '@', parameters('docDbName'), '.documents.azure.com:10250')]",
             "type": "string"
         }
     }

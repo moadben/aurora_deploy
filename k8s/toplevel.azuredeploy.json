@@ -1,13 +1,79 @@
 {
   "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
   "contentVersion": "1.0.0.0",
-  "parameters": {  },
+  "parameters": {
+    "dnsPrefix": {
+      "type": "string",
+      "metadata": {
+        "description": "The prefix for resources deployed"
+      }
+    },
+    "virtualNetworkName": {
+      "type": "string",
+      "metadata": {
+        "description": "The name of the VNet shared between Gluster and K8s"
+      }
+    },
+    "kubernetesSubnetName": {
+      "type": "string",
+      "metadata": {
+        "description": "The name of the Kubernetes subnet"
+      }
+    },
+    "glusterSubnetName": {
+      "type": "string",
+      "metadata": {
+        "description": "The name of the Gluster FS subnet"
+      }
+    },
+    "kubernetesAzureDeployJsonLink": {
+      "type": "string",
+      "metadata": {
+        "description": "The URL for the Kubernetes cluster azuredeploy.json"
+      }
+    }, 
+    "kubernetesAzureDeployParametersJsonLink": {
+      "type": "string",
+      "metadata": {
+        "description": "The URL for the Kubernetes cluster azuredeploy.parameters.json"
+      }
+    }, 
+    "adminUserName": {
+      "type": "string",
+      "metadata": {
+        "description": "The name of the administrative user"
+      }
+    },
+    "sshKeyData": {
+      "type": "string",
+      "metadata": {
+        "description": "The SSH key fro the administrative user"
+      }      
+    },
+    "glusterVmSize": {
+      "type": "string",
+      "defaultValue": "Standard_D1_v2",
+      "metadata": {
+        "description": "The VM size of the Gluster FS nodes"
+      }
+    },
+    "glusterNodeCount": {
+      "type": "int",
+      "defaultValue": 2,
+      "allowedValues": [
+        2,
+        4,
+        6,
+        8
+      ],
+      "metadata": {
+        "description": "Number of nodes in the gluster file system"
+      }
+    }
+  },
   "variables": {
-    "deploymentBase": "gfkubeclus2",
-    "virtualNetworkName": "[concat(variables('deploymentBase'),'VNET')]", 
-    "k8sSubnetName": "[concat(variables('deploymentBase'),'K8sSubnet')]",
-    "k8sSubnetAddressRange": "10.239.0.0/16",
-    "glusterSubnetName": "[concat(variables('deploymentBase'),'GlusterSubnet')]",
+    "virtualNetworkAddressSpace": "10.0.0.0/8",
+    "kubernetesSubnetAddressRange": "10.239.0.0/16",
     "glusterSubnetAddressRange": "10.250.0.0/24",
     "glusterSubnetAddressBase": "10.250.0.1"
   },
@@ -15,22 +81,22 @@
     {
       "apiVersion": "2016-03-30",
       "location": "[resourceGroup().location]",
-      "name": "[concat(variables('deploymentBase'),'VNET')]",
+      "name": "[parameters('virtualNetworkName')]",
       "properties": {
         "addressSpace": {
           "addressPrefixes": [
-            "10.0.0.0/8"
+            "[variables('virtualNetworkAddressSpace')]"
           ]
         },
         "subnets": [
           {
-            "name": "[variables('k8sSubnetName')]",
+            "name": "[parameters('kubernetesSubnetName')]",
             "properties": {
-              "addressPrefix": "[variables('k8sSubnetAddressRange')]"
+              "addressPrefix": "[variables('kubernetesSubnetAddressRange')]"
             }
           },
           {
-            "name": "[variables('glusterSubnetName')]",
+            "name": "[parameters('glusterSubnetName')]",
             "properties": {
               "addressPrefix": "[variables('glusterSubnetAddressRange')]"
             }
@@ -40,48 +106,67 @@
       "type": "Microsoft.Network/virtualNetworks"
     },
     {
-        "apiVersion": "2015-01-01",
-        "name": "glusterTemplate",
-        "type": "Microsoft.Resources/deployments",
-        "dependsOn": [
-          "[concat('Microsoft.Network/virtualNetworks/', variables('virtualNetworkName'))]"
-        ],
-        "properties": {
-          "mode": "incremental",
-          "templateLink": {
-            "uri": "https://raw.githubusercontent.com/jpoon/aurora_deploy/master/k8s/gluster/azuredeploy.json",
-            "contentVersion": "1.0.0.0"
+      "apiVersion": "2015-01-01",
+      "name": "glusterTemplate",
+      "type": "Microsoft.Resources/deployments",
+      "dependsOn": [
+        "[concat('Microsoft.Network/virtualNetworks/', parameters('virtualNetworkName'))]"
+      ],
+      "properties": {
+        "mode": "incremental",
+        "templateLink": {
+          "uri": "https://raw.githubusercontent.com/jpoon/aurora_deploy/master/k8s/gluster/azuredeploy.json",
+          "contentVersion": "1.0.0.0"
+        },
+        "parameters": {
+          "storageAccountName": {
+            "value": "[concat(toLower(parameters('dnsPrefix')),'gfsstor')]"
           },
-          "parameters": {
-            "storageAccountName": {
-              "value": "[concat(toLower(variables('deploymentBase')),'stor')]"
-            },
-            "virtualNetworkResourceGroup": {
-              "value": "[resourceGroup().name]"
-            },
-            "virtualNetworkName": {
-              "value": "[variables('virtualNetworkName')]" 
-            },
-            "gfsSubnetName": {
-              "value": "[variables('glusterSubnetName')]"
-            },
-            "adminUserName": {
-              "value": "gfuser"
-            },
-            "adminPassword": {
-              "value": "EpicHack2016"
-            },
-            "vmNamePrefix": {
-              "value": "[concat(toLower(variables('deploymentBase')),'gfsvm')]"
-            },
-            "vmSize": {
-              "value": "Standard_D1_v2"
-            },
-            "scaleNumber": {
-              "value": 4
-            }
+          "virtualNetworkResourceGroup": {
+            "value": "[resourceGroup().name]"
+          },
+          "virtualNetworkName": {
+            "value": "[parameters('virtualNetworkName')]" 
+          },
+          "gfsSubnetName": {
+            "value": "[parameters('glusterSubnetName')]"
+          },
+          "adminUserName": {
+            "value": "[parameters('adminUserName')]"
+          },
+          "sshKeyData": {
+            "value": "[parameters('sshKeyData')]"
+          },
+          "vmNamePrefix": {
+            "value": "[concat(toLower(parameters('dnsPrefix')),'gfsvm')]"
+          },
+          "vmSize": {
+            "value": "Standard_D1_v2"
+          },
+          "scaleNumber": {
+            "value": "[parameters('glusterNodeCount')]"
           }
         }
+      }
+    },
+    {
+      "apiVersion": "2015-01-01",
+      "name": "kubernetesTemplate",
+      "type": "Microsoft.Resources/deployments",
+      "dependsOn": [
+        "[concat('Microsoft.Resources/deployments/', 'glusterTemplate')]"
+      ],
+      "properties": {
+        "mode": "incremental",
+        "templateLink": {
+          "uri": "[parameters('kubernetesAzureDeployJsonLink')]",
+          "contentVersion": "1.0.0.0"
+        },
+        "parametersLink": { 
+          "uri": "[parameters('kubernetesAzureDeployParametersJsonLink')]",
+          "contentVersion": "1.0.0.0"
+        }     
+      }
     }
   ]
 }

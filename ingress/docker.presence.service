@@ -6,9 +6,12 @@ Requires=docker.service
 [Service]
 TimeoutStartSec=0
 Restart=always
-EnvironmentFile=/etc/aurora/presence.conf
-ExecStartPre=-/usr/bin/docker login -u $USER -p $PASSWORD
-ExecStart=/usr/bin/docker run -p 6429:6429 --name=presence --entrypoint ./presence generalfusion/presence:latest -p $PACH_IP -c $DBCOLLECTION -d $DATABASE_NAME -u $MONGO_URL
+EnvironmentFile=/etc/aurora/aurora.conf
+Environment=CONTAINER=presence
+ExecStartPre=/usr/bin/docker login -u $DOCKERHUB_USER -p $DOCKERHUB_PASSWORD
+ExecStart=/usr/bin/docker run -p ${PRESENCE_PORT}:${PRESENCE_PORT} --name $CONTAINER --entrypoint ./presence aurora-itadministrationgeneralfusi.azurecr.io/presence:latest -a 0.0.0.0:${PRESENCE_PORT} -p $PACH_IP -c $DB_VERSION_COLN -d $DB_NAME -u $MONGO_URL
+ExecStop=/usr/bin/docker kill $CONTAINER
+ExecStopPost=/usr/bin/docker rm $CONTAINER
 
 [Install]
 WantedBy=multi-user.target
