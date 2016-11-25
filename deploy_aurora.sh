@@ -9,13 +9,14 @@ SSH_KEYFILE=${5:-'~/.ssh/id_rsa.pub'}
 SERVICE_PRINCIPAL_SECRET=${6}
 DEPLOYMENT_STORAGE_BASEURI=${7}
 DEPLOYMENT_STORAGE_SAS=${8}
-GLOBAL_RESOURCE_GROUP=${9}
-CONTAINER_REGISTRY=${10}
-K8S_AGENT_COUNT=${11:-4}
-K8S_AGENT_VM_SIZE=${12:-'Standard_D2_v2'}
-ACS_ENGINE_CONFIG_FILE=${13}
-BASE_DEPLOYMENT_URI=${14}
-SPN_NAME=${15:-'http://Aurora_K8s_Controller'}
+ACR_RESOURCE_GROUP=${9}
+ACR_NAME=${10}
+DOCKER_REGISTRY=${11}
+K8S_AGENT_COUNT=${12:-4}
+K8S_AGENT_VM_SIZE=${13:-'Standard_D2_v2'}
+ACS_ENGINE_CONFIG_FILE=${14}
+BASE_DEPLOYMENT_URI=${15}
+SPN_NAME=${16:-'http://Aurora_K8s_Controller'}
 
 if [[ -z "$BASE_DEPLOYMENT_URI" ]]; then  
     BASE_DEPLOYMENT_URI="https://raw.githubusercontent.com/jpoon/aurora_deploy/$(git rev-parse HEAD)/"  
@@ -122,11 +123,17 @@ cat << EOF > "$BASE_OUT_DIR"/orchestrator.parameters.json
   "sshKeyData": {
     "value": "$SSH_KEY"
   },
-  "dockerHubUsername": {
+  "dockerLoginServer": {
+    "value": "$DOCKER_REGISTRY"
+  }, 
+  "dockerUserName": {
     "value": "$SPN_APPID"
   }, 
-  "dockerHubPassword": {
+  "dockerPassword": {
     "value": "$SERVICE_PRINCIPAL_SECRET"
+  },
+  "dockerRegistry": {
+    "value": "$DOCKER_REGISTRY"
   },
   "internalSshPublicKey": {
     "value": "$INTERNAL_SSH_PUBLIC_KEY"
@@ -151,14 +158,16 @@ cat << EOF > "$BASE_OUT_DIR"/orchestrator.parameters.json
   }
 }
 EOF
-# Now invoke ARM
+
+# Create the resource group and give our service principal access
 azure group create --name "$RESOURCE_GROUP" --location "$REGION"
-# Do the RBAC assignment, now that we've created the resource group
 azure role assignment create --objectId "$SPN_OBJECTID" --roleName "Contributor" --scope "/subscriptions/$SUBSCRIPTION_ID/resourceGroups/$RESOURCE_GROUP"
 
-ACR_ROLE_EXISTS=`azure role assignment list --objectId "$SPN_OBJECTID" --scope "/subscriptions/$SUBSCRIPTION_ID/resourceGroups/$GLOBAL_RESOURCE_GROUP/providers/Microsoft.ContainerRegistry/registries/$CONTAINER_REGISTRY" --json | jq 'length'`
+# Give the service principal access to the Azure Container Registry (ACR)
+ACR_ROLE_EXISTS=`azure role assignment list --objectId "$SPN_OBJECTID" --scope "/subscriptions/$SUBSCRIPTION_ID/resourceGroups/$ACR_RESOURCE_GROUP/providers/Microsoft.ContainerRegistry/registries/$ACR_NAME" --json | jq 'length'`
 if [[ ! $ACR_ROLE_EXISTS ]]; then
-    azure role assignment create --objectId "$SPN_OBJECTID" --roleName "Contributor" --scope "/subscriptions/$SUBSCRIPTION_ID/resourceGroups/$GLOBAL_RESOURCE_GROUP/providers/Microsoft.ContainerRegistry/registries/$CONTAINER_REGISTRY"
+    azure role assignment create --objectId "$SPN_OBJECTID" --roleName "Contributor" --scope "/subscriptions/$SUBSCRIPTION_ID/resourceGroups/$ACR_RESOURCE_GROUP/providers/Microsoft.ContainerRegistry/registries/$ACR_NAME"
 fi
 
+# Invoke the ARM
 azure group deployment create --name="aurora" --resource-group="$RESOURCE_GROUP" --template-file="$SCRIPT_DIR/orchestrator.json" --parameters-file="$BASE_OUT_DIR/orchestrator.parameters.json"
