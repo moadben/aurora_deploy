@@ -9,7 +9,7 @@
     "resources": [
         {
             "type": "Microsoft.Cache/Redis",
-            "name": "[parameters('redisName)]",
+            "name": "[parameters('redisName')]",
             "apiVersion": "2016-04-01",
             "location": "[resourceGroup().location]",
             "properties": {
