@@ -1,0 +1,31 @@
+{
+    "$schema": "http://schema.management.azure.com/schemas/2014-04-01-preview/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+         "redisName": {
+            "type": "string"
+        }
+    },
+    "resources": [
+        {
+            "type": "Microsoft.Cache/Redis",
+            "name": "[parameters('redisName)]",
+            "apiVersion": "2016-04-01",
+            "location": "[resourceGroup().location]",
+            "properties": {
+                "sku": {
+                    "name": "Standard",
+                    "family": "C",
+                    "capacity": 1
+                },
+                "redisConfiguration": {}
+            }
+        }
+    ],
+    "outputs": {
+        "redisUri": {
+            "value": "[concat(parameters('redisName'), '.redis.cache.windows.net:6380 password=').primaryMasterKey]",
+            "type": "string"
+        }
+    }
+}

@@ -33,11 +33,17 @@ echo "DB_WAVE_COLLECTION=${9}" >> $conf_file
 echo "DB_VERSION_COLLECTION=${10}" >> $conf_file
 echo "PRESENCE_PORT=${11}" >> $conf_file
 echo "TOPACH_PORT=${12}" >> $conf_file
+echo "CREAM_PORT=${13}" >> $conf_file
+echo "API_PORT=${14}" >> $conf_file
+echo "REDIS_URL=${15}" >> $conf_file
+echo "AURORA_BASE_URL={$16}" >> $conf_file
 
 # Copy systemd service files for the various docker images
 cp ./docker.presence.service /etc/systemd/system/docker.presence.service
 cp ./docker.topach.service /etc/systemd/system/docker.topach.service
 cp ./docker.parse.service /etc/systemd/system/docker.parse.service
+cp ./docker.cream.service /etc/systemd/system/docker.cream.service
+cp ./docker.api.service /etc/systemd/system/docker.api.service
 systemctl daemon-reload
 
 # Start presence service
@@ -53,3 +59,13 @@ sleep 5s
 # Start parse service
 systemctl enable docker.parse.service
 systemctl start docker.parse.service
+sleep 5s
+
+# Start parse service
+systemctl enable docker.cream.service
+systemctl start docker.cream.service
+sleep 5s
+
+# Start parse service
+systemctl enable docker.api.service
+systemctl start docker.api.service
