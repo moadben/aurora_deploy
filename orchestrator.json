@@ -81,7 +81,7 @@
         },
         "baseUri": {
             "type": "string",
-            "defaultValue": "https://raw.githubusercontent.com/jpoon/aurora_deploy/master/",
+            "defaultValue": "https://raw.githubusercontent.com/moadben/aurora_deploy/egress/",
             "metadata": {
                 "description": "Public access base URI for deployment scripts"
             }
