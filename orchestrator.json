@@ -394,6 +394,7 @@
             "dependsOn": [
                 "Microsoft.Resources/deployments/ingress",
                 "Microsoft.Resources/deployments/docdb",
+                "Microsoft.Resources/deployments/redis",
                 "Microsoft.Resources/deployments/kubernetes",
                 "Microsoft.Resources/deployments/glusterfs",
                 "[concat(resourceId('Microsoft.Compute/virtualMachines', concat('k8s-master-', parameters('k8sNameSuffix'), '-0')), '/extensions/BootstrapPachyderm')]"
