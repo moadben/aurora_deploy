@@ -19,7 +19,7 @@ BASE_DEPLOYMENT_URI=${15}
 SPN_NAME=${16:-'http://Aurora_K8s_Controller'}
 
 if [[ -z "$BASE_DEPLOYMENT_URI" ]]; then  
-    BASE_DEPLOYMENT_URI="https://raw.githubusercontent.com/moadben/aurora_deploy/$(git rev-parse HEAD)/"  
+    BASE_DEPLOYMENT_URI="https://raw.githubusercontent.com/moadben/aurora_deploy/egress/$(git rev-parse HEAD)/"  
 fi  
 
 ## Pre-requisites
