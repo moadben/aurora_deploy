@@ -268,7 +268,7 @@
         "containers": [
           {
             "name": "pachd-init",
-            "image": "pachyderm/pachd:1.2.3",
+            "image": "pachyderm/pachd:1.2.4",
             "env": [
               {
                 "name": "PACH_ROOT",
@@ -364,7 +364,7 @@
         "containers": [
           {
             "name": "pachd",
-            "image": "pachyderm/pachd:1.2.3",
+            "image": "pachyderm/pachd:1.2.4",
             "ports": [
               {
                 "name": "api-grpc-port",
@@ -400,7 +400,7 @@
               },
               {
                 "name": "JOB_SHIM_IMAGE",
-                "value": "pachyderm/job-shim:1.2.3"
+                "value": "pachyderm/job-shim:1.2.4"
               },
               {
                 "name": "JOB_IMAGE_PULL_POLICY",
@@ -408,7 +408,7 @@
               },
               {
                 "name": "PACHD_VERSION",
-                "value": "1.2.3"
+                "value": "1.2.4"
               },
               {
                 "name": "METRICS",

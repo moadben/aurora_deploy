@@ -1,5 +1,5 @@
 [Unit]
-Description=Ingress Start for ToPach Container
+Description=Ingress Start for API Container
 After=docker.service
 Requires=docker.service
 
@@ -7,9 +7,9 @@ Requires=docker.service
 TimeoutStartSec=0
 Restart=always
 EnvironmentFile=/etc/aurora/aurora.conf
-Environment=CONTAINER=topach
+Environment=CONTAINER=api
 ExecStartPre=/usr/bin/docker login $GF_DOCKER_LOGIN_SERVER -u $GF_DOCKER_USER -p $GF_DOCKER_PASSWORD
-ExecStart=/usr/bin/docker run -p ${TOPACH_PORT}:${TOPACH_PORT} --net=host  --name $CONTAINER --entrypoint ./${CONTAINER} ${GF_DOCKER_REGISTRY}/${CONTAINER}:${GF_DOCKER_TAG} -p $PACHYDERM_ADDRESS -a 0.0.0.0:${TOPACH_PORT} -v localhost:${PRESENCE_PORT} -u $DB_MONGO_URL -d $DB_NAME -c $DB_WAVE_COLLECTION
+ExecStart=/usr/bin/docker run -p ${API_PORT}:${API_PORT} --net=host  --name $CONTAINER --entrypoint ./${CONTAINER} ${GF_DOCKER_REGISTRY}/${CONTAINER}:${GF_DOCKER_TAG} -u $AURORA_BASE_URL -p $PACHYDERM_ADDRESS -c 127.0.0.1:${CREAM_PORT}
 ExecStop=/usr/bin/docker kill $CONTAINER
 ExecStopPost=/usr/bin/docker rm $CONTAINER ; /usr/bin/docker rmi ${GF_DOCKER_REGISTRY}/${CONTAINER}:${GF_DOCKER_TAG}
 

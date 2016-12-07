@@ -8,10 +8,10 @@ TimeoutStartSec=0
 Restart=always
 EnvironmentFile=/etc/aurora/aurora.conf
 Environment=CONTAINER=presence
-ExecStartPre=/usr/bin/docker login $GF_DOCKER_LOGIN_SERVER -u $DOCKERHUB_USER -p $DOCKERHUB_PASSWORD
-ExecStart=/usr/bin/docker run -p ${PRESENCE_PORT}:${PRESENCE_PORT} --name $CONTAINER --entrypoint ./${CONTAINER} ${GF_DOCKER_REG_HOST}/${CONTAINER}:${GF_DOCKER_TAG} -a 0.0.0.0:${PRESENCE_PORT} -p $PACH_IP -c $DB_VERSION_COLN -d $DB_NAME -u $MONGO_URL
+ExecStartPre=/usr/bin/docker login $GF_DOCKER_LOGIN_SERVER -u $GF_DOCKER_USER -p $GF_DOCKER_PASSWORD
+ExecStart=/usr/bin/docker run -p ${PRESENCE_PORT}:${PRESENCE_PORT} --name $CONTAINER --entrypoint ./${CONTAINER} ${GF_DOCKER_REGISTRY}/${CONTAINER}:${GF_DOCKER_TAG} -a 0.0.0.0:${PRESENCE_PORT} -p $PACHYDERM_ADDRESS -c $DB_VERSION_COLLECTION -d $DB_NAME -u $DB_MONGO_URL
 ExecStop=/usr/bin/docker kill $CONTAINER
-ExecStopPost=/usr/bin/docker rm $CONTAINER
+ExecStopPost=/usr/bin/docker rm $CONTAINER ; /usr/bin/docker rmi ${GF_DOCKER_REGISTRY}/${CONTAINER}:${GF_DOCKER_TAG}
 
 [Install]
 WantedBy=multi-user.target
